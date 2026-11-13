@@ -63,7 +63,7 @@ class MermaidBlock:
 @dataclass
 class ValidationResult:
     """Result of mermaid syntax validation."""
-    is_valid: bool
+    is_valid: Optional[bool]
     error_message: Optional[str] = None
     error_type: Optional[str] = None
     error_line: Optional[int] = None
@@ -687,7 +687,7 @@ def validate_blocks(
             "failed": failed,
             "unvalidated": unvalidated,
             "validation_level": "mermaid-cli",
-            "status": "failed" if failed else ("not_run" if unvalidated else "passed"),
+            "status": "failed" if failed else ("not_run" if unvalidated or not results else "passed"),
             "pass_rate": f"{passed / len(results) * 100:.1f}%" if results and not unvalidated else "N/A"
         }
     }

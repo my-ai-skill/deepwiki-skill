@@ -141,8 +141,8 @@ Place citations outside the diagram in the documentation text.
 graph TD
     A["ユーザー入力"] --> B["データ処理"]
     B --> C{"検証?"}
-    C -->|"成功"| D["保存"]
-    C -->|"失敗"| E["エラー処理"]
+    C -->|成功| D["保存"]
+    C -->|失敗| E["エラー処理"]
 ```
 
 ## Flowchart Best Practices
@@ -161,8 +161,8 @@ graph TD
 
 ```mermaid
 graph TD
-    A{"Condition"} -->|"Yes"| B["Action 1"]
-    A -->|"No"| C["Action 2"]
+    A{"Condition"} -->|Yes| B["Action 1"]
+    A -->|No| C["Action 2"]
 ```
 
 ### Keep It Simple
@@ -329,13 +329,13 @@ Usually caused by invalid characters or syntax.
 **Before**:
 ```mermaid
 graph TD
-    A --> B: label
+    A -->|label| B
 ```
 
 **After**:
 ```mermaid
 graph TD
-    A -->|"label"| B
+    A -->|label| B
 ```
 
 ### Error: "Unknown diagram type"
@@ -425,3 +425,30 @@ classDiagram
     Component <|-- Button
     Component <|-- Input
 ```
+
+## Rule 7: Flowchart Pipe Edge Labels Must Not Be Quoted
+
+For pipe-delimited flowchart edge labels, write the label as plain text between the pipes. Do not wrap it in single or double quotes. This rule is intentionally different from the quoted-node-label rule above.
+
+#### CORRECT
+\`\`\`mermaid
+ graph TD
+    A{"Condition"} -->|Yes| B["Action"]
+    A -->|No| C["Fallback"]
+\`\`\`
+
+#### WRONG
+\`\`\`mermaid
+ graph TD
+    A{"Condition"} -->|"Yes"| B["Action"]
+    A -->| "No" | C["Fallback"]
+\`\`\`
+
+For labels that need quoting or contain syntax-sensitive punctuation, use Mermaid's middle-label form and validate it with the target Mermaid version, for example:
+
+\`\`\`mermaid
+ graph TD
+    A -- "label with punctuation" --> B
+\`\`\`
+
+Do not transfer node-label quoting rules to pipe-delimited edge labels.

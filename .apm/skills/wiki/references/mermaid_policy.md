@@ -431,24 +431,24 @@ classDiagram
 For pipe-delimited flowchart edge labels, write the label as plain text between the pipes. Do not wrap it in single or double quotes. This rule is intentionally different from the quoted-node-label rule above.
 
 #### CORRECT
-\`\`\`mermaid
+```mermaid
  graph TD
     A{"Condition"} -->|Yes| B["Action"]
     A -->|No| C["Fallback"]
-\`\`\`
+```
 
 #### WRONG
-\`\`\`mermaid
+```mermaid
  graph TD
     A{"Condition"} -->|"Yes"| B["Action"]
     A -->| "No" | C["Fallback"]
-\`\`\`
+```
 
 For labels that need quoting or contain syntax-sensitive punctuation, use Mermaid's middle-label form and validate it with the target Mermaid version, for example:
 
-\`\`\`mermaid
+```mermaid
  graph TD
     A -- "label with punctuation" --> B
-\`\`\`
+```
 
 Do not transfer node-label quoting rules to pipe-delimited edge labels.

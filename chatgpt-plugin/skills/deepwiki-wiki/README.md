@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.1
+# DeepWiki Codebase Wiki 2.0.4
 
 This package is the ChatGPT/portable runtime distribution for the original DeepWiki Skill. It is intentionally additive: do not modify the original `.apm/` skill, its scripts, references, templates, worker definition, or prompt on the upstream default branch.
 
@@ -18,3 +18,11 @@ Serve the preview directory over HTTP because browsers may block local ES module
 ## Use
 
 Ask the host agent to use this skill for a repository, TOC-based generation, structure-only generation, or incremental update. The host adapter must report which capabilities were actually available: subagents, shell/Python/Node, Mermaid.js, Mermaid CLI, repository access, and write access.
+
+
+## Mermaid validation correctness (2.0.4)
+
+- Pipe-delimited flowchart edge labels are unquoted (`A -->|Yes| B`); quoted pipe labels are rejected by static regression lint.
+- Static checks are not a Mermaid parser. Runtime outcomes are tri-state: `passed`, `failed`, or `not_run`.
+- Mermaid CLI unavailability is reported as `not_run`, never as a diagram syntax failure or a successful validation.
+- Phase 4 requires actual Mermaid.js parse/render or Mermaid CLI success for every block before reporting an overall pass.

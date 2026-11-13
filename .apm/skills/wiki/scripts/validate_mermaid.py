@@ -342,13 +342,13 @@ def find_authoring_policy_issues(code: str) -> List[Dict[str, Any]]:
     regression case that motivated this rule.
     """
     issues = []
-    edge_pattern = re.compile(r'(?:-->|-.->|==>|---|--o|--x)\\s*\\|\\s*["\\'][^"\\']*["\\']\\s*\\|')
+    edge_pattern = re.compile(r"(?:-->|-.->|==>|---|--o|--x)\s*\|\s*['"][^'"]*['"]\s*\|")
     for line_number, line in enumerate(code.splitlines(), start=1):
         if edge_pattern.search(line):
             issues.append({
                 "line": line_number,
                 "message": "Quoted pipe-delimited edge label is not allowed.",
-                "fix_hint": "Use A -->|Yes| B. For a quoted label, use the middle-label form A -- \\"label\\" --> B and verify it with Mermaid.js.",
+                "fix_hint": 'Use A -->|Yes| B. For a quoted label, use A -- "label" --> B and verify it with Mermaid.js.',
             })
     return issues
 

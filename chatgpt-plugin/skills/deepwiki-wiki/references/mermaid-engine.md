@@ -12,7 +12,7 @@ Keep Mermaid authoring and rendering portable across browser-based LLMs, local c
 
 ## Browser preview behavior
 
-Open `../tools/mermaid/preview.html` in a modern browser. Paste Mermaid code or a Markdown document containing Mermaid fenced blocks. The page extracts blocks, invokes Mermaid.js `parse`/`render`, displays SVG previews, reports parse errors, and allows SVG download. It loads the pinned Mermaid ESM version from jsDelivr. Internet access is therefore required unless that dependency is locally vendored.
+Serve the preview directory over HTTP because browsers may block local ES module imports from `file://`. From the repository root, run `cd chatgpt-plugin/skills/deepwiki-wiki/tools/mermaid && python -m http.server 8000`, then open `http://127.0.0.1:8000/preview.html`. Paste Mermaid code or a Markdown document containing Mermaid fenced blocks. The page extracts blocks, invokes Mermaid.js `parse`/`render`, displays SVG previews, reports parse errors, and allows SVG download. It loads the pinned Mermaid ESM version from jsDelivr. Internet access is therefore required unless that dependency is locally vendored.
 
 The browser preview runs separately from the LLM chat UI. A web LLM that cannot execute arbitrary JavaScript cannot be assumed to render the artifact inside its own conversation. It can still generate the standard HTML preview artifact for the user's browser.
 

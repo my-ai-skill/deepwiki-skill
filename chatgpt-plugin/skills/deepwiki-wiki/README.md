@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.0
+# DeepWiki Codebase Wiki 2.0.1
 
 This package is the ChatGPT/portable runtime distribution for the original DeepWiki Skill. It is intentionally additive: do not modify the original `.apm/` skill, its scripts, references, templates, worker definition, or prompt on the upstream default branch.
 
@@ -13,7 +13,7 @@ This package is the ChatGPT/portable runtime distribution for the original DeepW
 
 ## Mermaid preview
 
-Open `tools/mermaid/preview.html` in a modern browser. Paste raw Mermaid or Markdown containing Mermaid code fences. The page uses Mermaid.js 11.4.1 from jsDelivr to parse and render SVG, and allows each SVG to be downloaded. Internet access is required unless the JS module is vendored locally.
+Serve the preview directory over HTTP because browsers may block local ES module imports from `file://`. From the repository root, run `cd chatgpt-plugin/skills/deepwiki-wiki/tools/mermaid && python -m http.server 8000`, then open `http://127.0.0.1:8000/preview.html`. Paste raw Mermaid or Markdown containing Mermaid code fences. The page uses Mermaid.js 11.4.1 from jsDelivr to parse and render SVG, and allows each SVG to be downloaded. Internet access to jsDelivr is required unless the JS module is vendored locally.
 
 ## Use
 

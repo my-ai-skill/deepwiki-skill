@@ -3,7 +3,7 @@
 ## Goal
 
 Validate the generated documentation and apply safe fixes:
-- Mermaid diagrams compile (or are clearly reported as unvalidated if Mermaid CLI is unavailable)
+- Mermaid diagrams pass a real Mermaid.js or Mermaid CLI parse/render check; if neither renderer actually runs, each affected block is explicitly reported as `not_run` (never as valid or invalid)
 - Document structure is consistent (PAGE_ID markers, AUTOGEN markers, no overlaps)
 
 ## Inputs
@@ -84,7 +84,7 @@ python scripts/validate_docs_structure.py \
 
 ### `validate_mermaid.py`
 
-Extracts and validates Mermaid diagrams in markdown files using the Mermaid CLI (`mmdc`).
+Extracts Mermaid diagrams, rejects known authoring-policy violations, and validates syntax using Mermaid CLI (`mmdc`) when available. A missing CLI is an unexecuted check, not a syntax failure.
 
 **Usage**:
 ```bash
@@ -159,16 +159,19 @@ python scripts/validate_mermaid.py \
     --output "{output_dir}/_reports/mermaid_invalid.json"
 ```
 
-2) If Mermaid CLI is unavailable (error_type: `cli_unavailable`):
-   - Do not attempt diagram fixes.
-   - Record the limitation in the step result (and leave existing diagrams unchanged).
+2) Interpret validation outcomes as three distinct states:
+   - `passed`: Mermaid CLI actually parsed and rendered the block successfully.
+   - `failed`: a static authoring-policy error or actual Mermaid parser/renderer error was found.
+   - `not_run`: Mermaid CLI/browser renderer was unavailable. Do not label this as valid or invalid and do not auto-rewrite the diagram.
+   - The JSON report must include `validation_status`, `validation_level`, and counts for `passed`, `failed`, and `unvalidated`.
+   - If CLI is unavailable but an actual browser can be opened, use `tools/mermaid/preview.html` and record Mermaid.js parse/render results. Otherwise report `not_run`.
 
 3) If invalid blocks are found (`total_invalid > 0`):
    - Fix each invalid diagram (max 3 attempts per diagram) using `mermaid_policy.md` and the `fix_hint`.
    - Re-run the script until no invalid blocks remain.
    - If still invalid after 3 attempts, comment out the diagram block and add a TODO noting the error.
 
-4) Report is saved to `{output_dir}/_reports/mermaid_invalid.json`
+4) Report is saved to `{output_dir}/_reports/mermaid_invalid.json`. A report with `total_unvalidated > 0` is incomplete, even when `total_invalid == 0`.
 
 ### 2. Document Structure Validation
 
@@ -200,3 +203,7 @@ python scripts/validate_docs_structure.py \
   - Add missing PAGE_ID/AUTOGEN markers
   - Fix mismatched section_id to match TOC
   - Do NOT rewrite page content
+
+## Mermaid acceptance gate
+
+A page set may be described as Mermaid-validated only when every extracted Mermaid block has `validation_status=passed` from an actual Mermaid.js parse+SVG render or Mermaid CLI run. Static policy checks are useful preflight checks but are not a parser. If any block is `not_run`, the overall Mermaid result is `not_run`/incomplete, not passed. If any block is `failed`, the result is failed until corrected and re-run. Keep the validation engine/version and execution evidence in the report.

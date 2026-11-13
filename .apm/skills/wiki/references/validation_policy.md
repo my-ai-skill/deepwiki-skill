@@ -5,7 +5,7 @@ This document defines the validation rules for wiki documents during Phase 4.
 ## Overview
 
 After all documents are generated, validate:
-1. **Mermaid Diagram Validation** - Ensure all diagrams compile
+1. **Mermaid Diagram Validation** - Ensure all diagrams compile, or explicitly report blocks that were not executed through a renderer
 2. **Document Structure Validation** - Ensure markers are correct
 
 ## Document Structure Validation
@@ -169,7 +169,7 @@ validate_docs_structure(
 
 ### Step 2: Validate Mermaid Diagrams
 
-Use `get_invalid_mermaid_blocks` MCP tool:
+Use the `validate_mermaid.py` helper (Mermaid CLI) or the portable Mermaid.js preview. Static lint is only a preflight check and is not a full parser:
 
 ```
 get_invalid_mermaid_blocks(
@@ -177,9 +177,12 @@ get_invalid_mermaid_blocks(
 )
 ```
 
-**Returns**:
+**Returns** (include unvalidated blocks separately when no renderer ran):
 ```json
 {
+  "validation_level": "mermaid-cli",
+  "status": "failed",
+  "unvalidated_blocks": [],
   "invalid_blocks": [
     {
       "file_path": "03_api.md",
@@ -220,7 +223,7 @@ After fixes, run validation again to confirm all issues are resolved:
 
 ```
 validate_docs_structure(...) -> summary.is_valid == true
-get_invalid_mermaid_blocks(...) -> total_invalid == 0
+get_invalid_mermaid_blocks(...) -> total_invalid == 0 AND total_unvalidated == 0
 ```
 
 ## Validation Report
@@ -259,3 +262,13 @@ Phase 4: Validation
 ```
 
 Both validations contribute to the final validation report.
+
+## Mermaid result semantics
+
+Never collapse renderer unavailability into a syntax error. Every block must be reported as one of:
+
+- `passed`: an actual Mermaid parser and renderer ran successfully.
+- `failed`: a static authoring-policy violation or actual parser/renderer error was found.
+- `not_run`: no parser/renderer ran; this is neither valid nor invalid.
+
+An overall Mermaid pass requires every extracted block to be `passed`. Static-only checks must be labeled static and must not produce a success claim for Mermaid compilation.

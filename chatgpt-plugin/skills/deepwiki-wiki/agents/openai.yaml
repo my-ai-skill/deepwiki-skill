@@ -1,0 +1,4 @@
+interface:
+  display_name: "DeepWiki Codebase Wiki"
+  short_description: "Cross-platform codebase wikis"
+  default_prompt: "Use DeepWiki's original six-phase workflow, preserve workflow-runner semantics, and generate evidence-based repository documentation with validated diagrams."

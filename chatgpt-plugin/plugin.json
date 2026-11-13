@@ -1,0 +1,33 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "deepwiki-codebase-wiki",
+  "version": "2.0.1",
+  "description": "Cross-platform DeepWiki workflow for source-grounded codebase documentation, preserving the six-phase core, workflow-runner contract, page-level agent parallelism, incremental synchronization, and portable Mermaid validation/rendering.",
+  "author": { "name": "chenxi" },
+  "homepage": "https://github.com/my-ai-skill/deepwiki-skill",
+  "repository": "https://github.com/my-ai-skill/deepwiki-skill",
+  "license": "MIT",
+  "keywords": [
+    "deepwiki",
+    "codebase-analysis",
+    "documentation",
+    "github",
+    "mermaid",
+    "subagents",
+    "incremental-sync",
+    "cross-platform"
+  ],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "DeepWiki Codebase Wiki",
+        "shortDescription": "Cross-platform codebase wikis",
+        "longDescription": "An expanded ChatGPT package for the original DeepWiki Skill. It preserves the original six phases and workflow-runner execution contract, uses native subagents and page-level parallelism when the host supports them, falls back to the same phase contract when it does not, and provides a portable browser-based Mermaid.js preview without requiring an MCP server. The original upstream .apm skill remains untouched in the repository's main branch.",
+        "developerName": "chenxi",
+        "category": "Developer tools",
+        "capabilities": [],
+        "defaultPrompt": "Use DeepWiki's original six-phase workflow to create or update evidence-based codebase documentation. Preserve the workflow-runner contract, use page-level subagents when supported, and validate Mermaid diagrams with the portable browser renderer or the available CLI."
+      }
+    }
+  }
+}

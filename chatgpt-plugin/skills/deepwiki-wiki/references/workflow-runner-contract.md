@@ -35,3 +35,15 @@ Workers return page artifacts to the orchestrator instead of concurrently writin
 ## Required truthful reporting
 
 Report `parallel` only if multiple workers were actually scheduled concurrently by the host. Otherwise report `sequential fallback`. Report the actual number of workers and completed/failed pages when those facts are available.
+
+## Pinned source dependencies (2.0.4)
+
+For reproducible execution, retrieve the original phase specifications and Mermaid helper files from repository `my-ai-skill/deepwiki-skill` at commit `2c95d11f13c1ef9251a44439d4a8367a826e8e8e` (the commit containing the corrected Mermaid policy, validator, and Phase 4 instructions). Do not use a floating branch URL for these dependencies.
+
+Mermaid-specific paths at that exact commit:
+
+- `.apm/skills/wiki/references/mermaid_policy.md`
+- `.apm/skills/wiki/scripts/validate_mermaid.py`
+- `.apm/skills/wiki/references/workflow/validate-docs.md`
+
+The package reference `references/mermaid-authoring.md` provides the same edge-label rule and regression fixture. Any older policy that recommends quoting labels inside `|...|` is superseded and must not be followed.

@@ -70,8 +70,10 @@ class ValidationResult:
     fix_hint: Optional[str] = None
 
     def to_dict(self) -> Dict[str, Any]:
+        status = "not_run" if self.error_type == "cli_unavailable" else ("passed" if self.is_valid is True else "failed")
         return {
             "is_valid": self.is_valid,
+            "validation_status": status,
             "error_message": self.error_message,
             "error_type": self.error_type,
             "error_line": self.error_line,
@@ -332,6 +334,25 @@ def extract_mermaid(
 # =============================================================================
 
 
+def find_authoring_policy_issues(code: str) -> List[Dict[str, Any]]:
+    """Find known unsafe authoring patterns before invoking a Mermaid renderer.
+
+    Pipe-delimited flowchart edge labels are plain text, not quoted node labels.
+    A quoted pipe label is rejected by the GitHub Mermaid parser used in the
+    regression case that motivated this rule.
+    """
+    issues = []
+    edge_pattern = re.compile(r'(?:-->|-.->|==>|---|--o|--x)\\s*\\|\\s*["\\'][^"\\']*["\\']\\s*\\|')
+    for line_number, line in enumerate(code.splitlines(), start=1):
+        if edge_pattern.search(line):
+            issues.append({
+                "line": line_number,
+                "message": "Quoted pipe-delimited edge label is not allowed.",
+                "fix_hint": "Use A -->|Yes| B. For a quoted label, use the middle-label form A -- \\"label\\" --> B and verify it with Mermaid.js.",
+            })
+    return issues
+
+
 @functools.cache
 def check_mermaid_cli_available() -> bool:
     """Check if mermaid CLI (mmdc) is available. Result is cached."""
@@ -488,6 +509,17 @@ def validate_mermaid_code(
     Returns:
         ValidationResult with validation status and error info
     """
+    policy_issues = find_authoring_policy_issues(code)
+    if policy_issues:
+        issue = policy_issues[0]
+        return ValidationResult(
+            is_valid=False,
+            error_message=issue["message"],
+            error_type="authoring_policy_error",
+            error_line=issue["line"],
+            fix_hint=issue["fix_hint"],
+        )
+
     input_file = None
     output_file = None
 
@@ -542,10 +574,10 @@ def validate_mermaid_code(
 
     except FileNotFoundError:
         return ValidationResult(
-            is_valid=False,
+            is_valid=None,
             error_message=f"mmdc not found: {mmdc_path}",
             error_type="cli_unavailable",
-            fix_hint="Install mermaid-cli: npm install -g @mermaid-js/mermaid-cli",
+            fix_hint="Install mermaid-cli: npm install -g @mermaid-js/mermaid-cli, or run the Mermaid.js browser preview. This block was not syntax-validated.",
         )
 
     except Exception as e:
@@ -576,12 +608,14 @@ def validate_mermaid(code: str) -> ValidationResult:
     """
     if not check_mermaid_cli_available():
         return ValidationResult(
-            is_valid=False,
+            is_valid=None,
             error_message=(
                 "Mermaid CLI (mmdc) is not available. "
-                "Install it with: npm install -g @mermaid-js/mermaid-cli"
+                "Install it with: npm install -g @mermaid-js/mermaid-cli. "
+                "Validation was not run; this is not evidence that the diagram is invalid."
             ),
             error_type="cli_unavailable",
+            fix_hint="Run the Mermaid.js browser preview or install Mermaid CLI.",
         )
 
     return validate_mermaid_code(code)
@@ -604,6 +638,7 @@ def validate_blocks(
     results = []
     passed = 0
     failed = 0
+    unvalidated = 0
 
     for block in blocks:
         if "error" in block:
@@ -637,10 +672,12 @@ def validate_blocks(
 
         results.append(result)
 
-        if validation.is_valid:
+        if validation.is_valid is True:
             passed += 1
-        else:
+        elif validation.is_valid is False:
             failed += 1
+        else:
+            unvalidated += 1
 
     return {
         "results": results,
@@ -648,7 +685,10 @@ def validate_blocks(
             "total": len(results),
             "passed": passed,
             "failed": failed,
-            "pass_rate": f"{passed / len(results) * 100:.1f}%" if results else "N/A"
+            "unvalidated": unvalidated,
+            "validation_level": "mermaid-cli",
+            "status": "failed" if failed else ("not_run" if unvalidated else "passed"),
+            "pass_rate": f"{passed / len(results) * 100:.1f}%" if results and not unvalidated else "N/A"
         }
     }
 
@@ -666,7 +706,7 @@ def get_invalid_blocks(validation_result: Dict[str, Any]) -> List[Dict[str, Any]
     invalid_blocks = []
 
     for result in validation_result.get("results", []):
-        if not result.get("is_valid", True):
+        if result.get("is_valid") is False:
             invalid_blocks.append({
                 "file_path": result.get("file_path", ""),
                 "code": result.get("code", ""),
@@ -679,6 +719,23 @@ def get_invalid_blocks(validation_result: Dict[str, Any]) -> List[Dict[str, Any]
             })
 
     return invalid_blocks
+
+
+def get_unvalidated_blocks(validation_result: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Return blocks for which no Mermaid renderer actually ran."""
+    return [
+        {
+            "file_path": result.get("file_path", ""),
+            "code": result.get("code", ""),
+            "start_line": result.get("start_line", 0),
+            "end_line": result.get("end_line", 0),
+            "error_message": result.get("error_message"),
+            "error_type": result.get("error_type"),
+            "fix_hint": result.get("fix_hint"),
+        }
+        for result in validation_result.get("results", [])
+        if result.get("validation_status") == "not_run"
+    ]
 
 
 def main():
@@ -754,9 +811,14 @@ def main():
                     if args.invalid_only:
                         invalid = get_invalid_blocks(result)
                         files_affected = len(set(b["file_path"] for b in invalid if b.get("file_path")))
+                        unvalidated = get_unvalidated_blocks(result)
                         result = {
+                            "validation_level": "mermaid-cli",
+                            "status": result["summary"]["status"],
                             "invalid_blocks": invalid,
+                            "unvalidated_blocks": unvalidated,
                             "total_invalid": len(invalid),
+                            "total_unvalidated": len(unvalidated),
                             "total_scanned": result["summary"]["total"],
                             "files_affected": files_affected,
                         }
@@ -782,9 +844,14 @@ def main():
             if args.invalid_only:
                 invalid = get_invalid_blocks(result)
                 files_affected = len(set(b["file_path"] for b in invalid if b.get("file_path")))
+                unvalidated = get_unvalidated_blocks(result)
                 result = {
+                    "validation_level": "mermaid-cli",
+                    "status": result["summary"]["status"],
                     "invalid_blocks": invalid,
+                    "unvalidated_blocks": unvalidated,
                     "total_invalid": len(invalid),
+                    "total_unvalidated": len(unvalidated),
                     "total_scanned": result["summary"]["total"],
                     "files_affected": files_affected,
                 }
@@ -801,12 +868,19 @@ def main():
 
         # Exit with error code if validation failed
         if isinstance(result, dict):
-            if "is_valid" in result and not result["is_valid"]:
+            if result.get("is_valid") is False:
                 return 1
-            if "summary" in result and result["summary"]["failed"] > 0:
+            if result.get("is_valid") is None and result.get("error_type") == "cli_unavailable":
+                return 2
+            if "summary" in result:
+                if result["summary"]["failed"] > 0:
+                    return 1
+                if result["summary"].get("unvalidated", 0) > 0:
+                    return 2
+            if result.get("total_invalid", 0) > 0:
                 return 1
-            if "total_invalid" in result and result["total_invalid"] > 0:
-                return 1
+            if result.get("total_unvalidated", 0) > 0:
+                return 2
 
         return 0
 

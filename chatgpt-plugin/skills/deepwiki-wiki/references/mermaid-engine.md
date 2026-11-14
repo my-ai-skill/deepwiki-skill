@@ -1,3 +1,7 @@
+## Version 2.0.4 authoritative authoring policy
+
+For Mermaid authoring and repairs, read the packaged `mermaid-authoring.md` reference first. It is the current authoritative rule set for the ChatGPT package and supersedes older quoted pipe-edge-label examples in historical upstream references. The corrected source policy, static regression lint, and Phase 4 tri-state changes are in `my-ai-skill/deepwiki-skill` branch `feature/chatgpt-deepwiki-plugin` at commit `7dc70c2983f707590a8f9378337c899776a8cc3f` (or a later commit on that same branch).
+
 # Mermaid Engine: portable design without MCP
 
 ## Goal

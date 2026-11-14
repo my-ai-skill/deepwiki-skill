@@ -28,7 +28,7 @@
         "developerName": "chenxi",
         "category": "Developer tools",
         "capabilities": [],
-        "defaultPrompt": "Use DeepWiki's original six-phase workflow to create or update evidence-based codebase documentation. Preserve the workflow-runner contract, use page-level subagents when supported, and validate Mermaid diagrams with the portable browser renderer or the available CLI."
+        "defaultPrompt": "Use DeepWiki's original six-phase workflow to create or update source-grounded documentation. Preserve the workflow-runner contract and use page-level subagents when the host genuinely supports them; otherwise use sequential fallback. Before creating or repairing Mermaid diagrams, read the packaged references/mermaid-authoring.md and references/mermaid-engine.md. Never quote pipe-delimited flowchart edge labels (write A -->|Yes| B, not A -->|\"Yes\"| B). Treat static checks as preflight only. Report each diagram as passed, failed, or not_run; report overall Mermaid success only when every block actually passes Mermaid.js parse+SVG render or Mermaid CLI."
       }
     }
   }

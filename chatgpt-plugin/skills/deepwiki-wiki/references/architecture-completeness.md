@@ -15,6 +15,8 @@ Produce these artifacts in addition to the existing TOC and pages:
 
 The architecture map is a plan derived from source inspection, not a folder-name outline. The coverage report records what was actually verified after writing.
 
+For end-to-end runtime paths, also follow `references/execution-lifecycle-analysis.md`; lifecycle stage names and order must come from the target source, not from a familiar framework template.
+
 ## Phase 2 — build an architecture map before choosing pages
 
 Read the repository tree, manifests/build files, entry points, representative implementation files, and tests. Identify the architecture dimensions that actually exist in this repository. Do not force every category onto every project.
@@ -173,3 +175,38 @@ The coverage helper returns:
 - \`failed\`: malformed records, missing evidence for a covered claim, duplicate IDs, missing diagram audits, or a critical in-scope relationship omitted from a diagram.
 
 A complete Wiki run must not be reported as fully passed when content coverage is incomplete or failed. A Mermaid renderer result of \`not_run\` must also remain \`not_run\`; do not conflate it with diagram-semantic status.
+
+
+## Phase 4B — automated cross-file verification
+
+The manifest validator above checks the declared ledger. The cross-file verifier checks that the ledger is actually connected to the repository files and rendered Wiki:
+
+`tools/architecture/audit_wiki.py`
+
+Run from the target repository root after `validate_coverage.py`:
+
+```bash
+python <path-to-deepwiki-skill>/tools/architecture/audit_wiki.py . --wiki-dir docs/wiki --output docs/wiki/_reports/cross_file_audit.json
+```
+
+The host may invoke the packaged script from its installed Skill path; do not assume it is physically inside the target repository.
+
+The cross-file verifier checks:
+
+- coverage and architecture-map repository identity and frozen source commit match;
+- TOC `ref_commit_hash` matches the coverage report;
+- every coverage page exists and its first-line `PAGE_ID` matches the manifest;
+- each covered source file exists; unreviewed inventory items remain incomplete; not-applicable entries need a reason;
+- each evidence path is inside the repository, each line range exists, and any `contains` excerpt is present in the cited source lines;
+- each evidence range is covered by a Markdown source link pointing to the same source commit, source path, and line interval;
+- every Markdown Mermaid fence has one unique `DIAGRAM_ID`, and diagram IDs match one-to-one with diagram audits;
+- declared diagram count matches actual Mermaid fences;
+- architecture-map and coverage-ledger relationship ID sets match;
+- every diagram-backed relationship's `diagram_fragment` exists in the exact Mermaid block named by `diagram_id`;
+- all in-scope relationships are accounted for, and no critical in-scope relationship is omitted.
+
+A report with cross-file errors fails; missing exact anchors/excerpts or unreviewed records remain incomplete. The tool must not mark a page complete when either state is not passed.
+
+The verifier performs deterministic path, line-range, citation, marker, and fragment checks. It does **not** prove that a C++ call edge is semantically correct merely because its label appears in Mermaid, nor can it discover a relationship omitted from both the map and ledger. Phase 4's independent source reread remains mandatory. For lifecycle analyses, additionally follow `references/execution-lifecycle-analysis.md` and reconstruct the runtime path, callback ordering, state transitions, and cleanup behavior from source.
+
+Include `cross_file_audit.json` and its status in `SUMMARY.md`, separate from semantic review and Mermaid renderer status.

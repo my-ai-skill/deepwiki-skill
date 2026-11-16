@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.8
+# DeepWiki Codebase Wiki 2.0.9
 
 This package is the ChatGPT/portable runtime distribution for the original DeepWiki Skill. It is intentionally additive: do not modify the original `.apm/` skill, its scripts, references, templates, worker definition, or prompt on the upstream default branch.
 
@@ -20,7 +20,7 @@ Serve the preview directory over HTTP because browsers may block local ES module
 Ask the host agent to use this skill for a repository, TOC-based generation, structure-only generation, or incremental update. The host adapter must report which capabilities were actually available: subagents, shell/Python/Node, Mermaid.js, Mermaid CLI, repository access, and write access.
 
 
-## Mermaid validation correctness (2.0.7)
+## Mermaid validation correctness
 
 - The plugin's authoring policy standardizes pipe-delimited flowchart edge labels as unquoted (`A -->|Yes| B`). The static lint/repair helper normalizes wrapper-quoted labels; this is an authoring-policy check, not proof that Mermaid.js itself rejects the original text.
 - Static checks are not a Mermaid parser. Runtime outcomes are tri-state: `passed`, `failed`, or `not_run`.
@@ -28,16 +28,16 @@ Ask the host agent to use this skill for a repository, TOC-based generation, str
 - Phase 4 requires actual Mermaid.js parse/render or Mermaid CLI success for every block before reporting an overall pass.
 
 
-## Deterministic Mermaid authoring check (2.0.7)
+## Deterministic Mermaid authoring check
 
 Run `python tools/mermaid/mermaid_lint.py path/to/page.md --check` for a non-mutating static check. To normalize safe wrapper-quoted pipe labels, write to a separate review file with `--repair --output /tmp/page.repaired.md`. Review the diff, then merge only the intended generated/AUTOGEN changes back into the original page. The temporary repaired file is not a second deliverable Wiki page. Manual content outside AUTOGEN markers must remain unchanged.
 
 The helper does not run Mermaid.js. Use `preview.html` for actual parse and SVG render; report renderer status separately as `passed`, `failed`, or `not_run`.
 
 
-## Architecture completeness gate (2.0.8)
+## Architecture completeness gate
 
-A structurally valid Wiki can still omit important source relationships. Version 2.0.8 adds a source-derived architecture map before TOC design, page-local claim/relationship ledgers during writing, and a separate Phase 4 semantic review. The reviewer re-opens key source files and checks diagram nodes/edges, direction, relation type, conditional branches, and omissions against source evidence.
+A structurally valid Wiki can still omit important source relationships. The current adapter adds a source-derived architecture map before TOC design, page-local claim/relationship ledgers during writing, and a separate Phase 4 semantic review. The reviewer re-opens key source files and checks diagram nodes/edges, direction, relation type, conditional branches, and omissions against source evidence.
 
 - Policy: `references/architecture-completeness.md`
 - Coverage manifest validator: `tools/architecture/validate_coverage.py`
@@ -45,3 +45,8 @@ A structurally valid Wiki can still omit important source relationships. Version
 - Required report: `docs/wiki/_reports/architecture_coverage.json`
 
 The helper checks whether the declared coverage ledger is complete and internally consistent. It is not a source-code analyzer and cannot find a relationship omitted from the ledger; independent source rereading in Phase 4 remains mandatory. Structural validation, content coverage, diagram-semantic review, Mermaid authoring lint, and actual Mermaid rendering are separate statuses.
+
+
+## Version boundaries
+
+The ChatGPT plugin version comes from the parent `chatgpt-plugin/plugin.json`. The original Agent Skill version remains in the repository-root `apm.yml`; these are separate deliverables and must not be forced to the same number.

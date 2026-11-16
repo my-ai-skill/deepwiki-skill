@@ -65,7 +65,7 @@ def check_repo(root: Path) -> dict[str, Any]:
     package_root = root / "chatgpt-plugin"
     if package_root.exists():
         version_family = plugin_version.rsplit(".", 1)[0] if plugin_version else ""
-        version_literal_re = re.compile(rf"(?<!\\d){re.escape(version_family)}\\.\\d+(?!\\d)") if version_family else None
+        version_literal_re = re.compile(rf"(?<!\d){re.escape(version_family)}\.\d+(?!\d)") if version_family else None
         for path in package_root.rglob("*.md"):
             try:
                 content = path.read_text(encoding="utf-8")

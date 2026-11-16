@@ -45,7 +45,7 @@ def _iter_package_text_files(package_root: Path):
             # The caller will report read errors for files it attempts to audit.
             yield path, None
             continue
-        if "\\x00" in content:
+        if "\x00" in content:
             continue
         yield path, content
 

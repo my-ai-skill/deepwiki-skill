@@ -12,7 +12,6 @@ from pathlib import Path
 from typing import Any
 
 SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
-SEMVER_TOKEN_RE = re.compile(r"(?<![\d.])\d+\.\d+\.\d+(?![\d.])")
 BADGE_RE = re.compile(r"version-([0-9]+\.[0-9]+\.[0-9]+)-blue\.svg")
 VERSION_HEADING_RE = re.compile(r"^#{1,6}\s+.*?\((\d+\.\d+\.\d+)\)\s*$", re.MULTILINE)
 

@@ -16,6 +16,7 @@ def valid_manifest():
         "pages": [{
             "page_id": "repo_01_build",
             "filename": "01_build.md",
+            "diagram_count": 1,
             "source_inventory": [
                 {"path": "CMakeLists.txt", "disposition": "covered", "symbols_reviewed": ["gmock"], "reason": ""}
             ],
@@ -123,6 +124,38 @@ class CoverageValidatorTests(unittest.TestCase):
         data = valid_manifest()
         data["semantic_review"]["status"] = "not_run"
         self.assertEqual(validate_manifest(data)["status"], "incomplete")
+
+
+    def test_diagram_audit_count_must_match_declared_mermaid_count(self):
+        data = valid_manifest()
+        data["pages"][0]["diagram_count"] = 2
+        report = validate_manifest(data)
+        self.assertEqual(report["status"], "failed")
+        self.assertIn("diagram_audit_count", {x["code"] for x in report["errors"]})
+
+    def test_googlemock_main_entrypoint_omission_is_caught(self):
+        data = valid_manifest()
+        relation = {
+            "id": "rel-gmock-main-entry",
+            "kind": "entrypoint",
+            "source": "gmock_main.cc",
+            "target": "InitGoogleMock -> RUN_ALL_TESTS",
+            "condition": "ordinary platforms",
+            "importance": "critical",
+            "status": "covered",
+            "evidence": [{"path": "googlemock/src/gmock_main.cc", "start_line": 61, "end_line": 72}],
+            "representation": {"kind": "prose", "location": "Test entrypoint section"},
+        }
+        data["pages"][0]["relationships"].append(relation)
+        audit = data["pages"][0]["diagram_audits"][0]
+        audit["in_scope_relationship_ids"].append("rel-gmock-main-entry")
+        audit["omissions"].append({
+            "relationship_id": "rel-gmock-main-entry",
+            "reason": "incorrectly omitted from a diagram whose scope includes test entrypoints",
+        })
+        report = validate_manifest(data)
+        self.assertEqual(report["status"], "failed")
+        self.assertIn("critical_diagram_omission", {x["code"] for x in report["errors"]})
 
     def test_unknown_relationship_reference_fails(self):
         data = valid_manifest()

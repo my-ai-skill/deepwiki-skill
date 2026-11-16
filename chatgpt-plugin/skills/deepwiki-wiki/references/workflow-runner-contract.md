@@ -24,6 +24,10 @@ One invocation = exactly one phase. Load its phase specification first, then onl
 | No subagents | Current agent becomes the runner and executes phase specs sequentially, preserving the same inputs, references, outputs, and validation. |
 | Browser-only model | Produce artifacts and explicit next-step instructions; never claim local scripts or browser JS ran unless actually executed. |
 
+## Mandatory architecture-completeness contract (2.0.8)
+
+Every TOC-based/automatic run must load `references/architecture-completeness.md` before TOC design, page writing, and validation. Phase 2 produces `_context/architecture_map.json`; Phase 3 returns a page-local claim/relationship evidence ledger with each page; Phase 4 independently re-reads key source files, audits every diagram against source-derived relationships, merges the ledgers, writes `_reports/architecture_coverage.json`, and runs `tools/architecture/validate_coverage.py`. The coverage helper validates the declared manifest only; it cannot discover omitted relationships or prove semantic evidence. The source reread is therefore mandatory. Structural validity, citation validity, Mermaid syntax, and semantic completeness must be reported as separate dimensions. Any unreviewed item or coverage gap makes content coverage `incomplete`; a critical in-scope diagram omission or malformed/evidenceless record makes it `failed`.
+
 ## Page-scoped `doc-write`
 
 The orchestrator passes `phase_id=doc-write`, the exact `phase_spec`, TOC path/content, repo context, output directory, locale, and one `page_id`. A worker returns exactly one page plus source inventory and validation notes. It must not write to other pages. Workers run in foreground and all must complete before Phase 4. Retry failed page workers only; do not repeat successful pages. Merge and validate cross-page links centrally.

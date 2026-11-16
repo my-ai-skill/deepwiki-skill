@@ -5,7 +5,7 @@ import argparse, json, re, unicodedata
 from pathlib import Path
 
 LANG_RE = re.compile(r"(?m)^\s*(?:filename_language|language):\s*['\"]?([^'\"#\s]+)")
-FILENAME_RE = re.compile(r"(?m)^\s*filename:\s*(?:['\"]([^'\"]+\.md)['\"]|([^\s#]+\.md))\s*$")
+FILENAME_RE = re.compile(r"(?m)^\s*(?:-\s*)?filename:\s*(?:['\"]([^'\"]+\.md)['\"]|([^\s#]+\.md))\s*$")
 CJK_RE = re.compile(r"[\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff]")
 JAPANESE_RE = re.compile(r"[\u3040-\u30ff]")
 KOREAN_RE = re.compile(r"[\uac00-\ud7af]")

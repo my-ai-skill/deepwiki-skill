@@ -71,6 +71,15 @@ class VersionAuditTests(unittest.TestCase):
             self.assertEqual(report["status"], "failed")
             self.assertTrue(any("stale versioned heading" in item for item in report["errors"]))
 
+    def test_old_plugin_version_in_body_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); make_repo(root)
+            doc = root / "chatgpt-plugin" / "skills" / "deepwiki-wiki" / "README.md"
+            doc.write_text("# DeepWiki Codebase Wiki 2.0.9\\nPrevious release 2.0.6\\n", encoding="utf-8")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("stale plugin release version 2.0.6" in item for item in report["errors"]))
+
     def test_agent_skill_badge_must_match_apm_manifest(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

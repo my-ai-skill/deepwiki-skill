@@ -41,7 +41,7 @@ A structurally valid Wiki can still omit important source relationships. The cur
 
 - Policy: `references/architecture-completeness.md`
 - Coverage manifest validator: `tools/architecture/validate_coverage.py`
-- Regression tests: `python -m unittest discover -s tools/architecture/tests -v`
+- Regression tests (run from `chatgpt-plugin/skills/deepwiki-wiki/`): `python -m unittest discover -s tools/architecture/tests -v` and `python -m unittest discover -s tools/mermaid/tests -v`
 - Required report: `docs/wiki/_reports/architecture_coverage.json`
 
 The helper checks whether the declared coverage ledger is complete and internally consistent. It is not a source-code analyzer and cannot find a relationship omitted from the ledger; independent source rereading in Phase 4 remains mandatory. Structural validation, content coverage, diagram-semantic review, Mermaid authoring lint, and actual Mermaid rendering are separate statuses.

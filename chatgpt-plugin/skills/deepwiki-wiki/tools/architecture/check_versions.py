@@ -64,6 +64,8 @@ def check_repo(root: Path) -> dict[str, Any]:
 
     package_root = root / "chatgpt-plugin"
     if package_root.exists():
+        version_family = plugin_version.rsplit(".", 1)[0] if plugin_version else ""
+        version_literal_re = re.compile(rf"(?<!\\d){re.escape(version_family)}\\.\\d+(?!\\d)") if version_family else None
         for path in package_root.rglob("*.md"):
             try:
                 content = path.read_text(encoding="utf-8")
@@ -76,6 +78,13 @@ def check_repo(root: Path) -> dict[str, Any]:
                         f"{path.relative_to(root).as_posix()} contains a stale versioned heading "
                         f"({old_version}); use an unversioned feature heading or current release"
                     )
+            if version_literal_re:
+                for seen_version in sorted(set(version_literal_re.findall(content))):
+                    if seen_version != plugin_version:
+                        errors.append(
+                            f"{path.relative_to(root).as_posix()} contains stale plugin release "
+                            f"version {seen_version}; current plugin version is {plugin_version}"
+                        )
 
     # The root APM package is the original Agent Skill, not the ChatGPT adapter.
     apm_path = root / "apm.yml"

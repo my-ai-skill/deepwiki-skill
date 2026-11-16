@@ -41,4 +41,4 @@ The manifest validator does not understand the codebase by itself. Phase 4 must 
 
 - The ChatGPT runtime adapter version is declared by `chatgpt-plugin/plugin.json` and must match this README and `skills/deepwiki-wiki/README.md`.
 - The original Agent Skill version is declared separately by the repository-root `apm.yml` and displayed in the root language READMEs. It is intentionally independent; the current root APM version is not the ChatGPT plugin version.
-- Run `python skills/deepwiki-wiki/tools/architecture/check_versions.py .` to audit these boundaries and stale release-version headings.
+- Run `python chatgpt-plugin/skills/deepwiki-wiki/tools/architecture/check_versions.py .` to audit these boundaries and stale plugin release-version references.

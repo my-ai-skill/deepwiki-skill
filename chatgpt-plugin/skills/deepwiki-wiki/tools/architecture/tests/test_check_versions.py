@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from check_versions import check_repo
 
 
-def make_repo(root: Path, plugin_version="2.0.9", apm_version="1.0.4"):
+def make_repo(root: Path, plugin_version="2.0.10", apm_version="1.0.4"):
     def older_version(steps: int) -> str:
         major, minor, patch = plugin_version.split(".")
         return f"{major}.{minor}.{max(0, int(patch) - steps)}"
@@ -39,10 +39,10 @@ class VersionAuditTests(unittest.TestCase):
     def test_plugin_and_agent_skill_versions_are_independent(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            make_repo(root, plugin_version="2.0.9", apm_version="1.0.4")
+            make_repo(root, plugin_version="2.0.10", apm_version="1.0.4")
             report = check_repo(root)
             self.assertEqual(report["status"], "passed", report)
-            self.assertEqual(report["plugin_version"], "2.0.9")
+            self.assertEqual(report["plugin_version"], "2.0.10")
             self.assertEqual(report["upstream_apm_skill_version"], "1.0.4")
             self.assertTrue(report["versions_are_independent"])
 
@@ -77,7 +77,7 @@ class VersionAuditTests(unittest.TestCase):
             older_version = make_repo(root)
             doc = root / "chatgpt-plugin" / "skills" / "deepwiki-wiki" / "README.md"
             doc.write_text(
-                f"# DeepWiki Codebase Wiki 2.0.9\n\n## Mermaid rules ({older_version(2)})\n",
+                f"# DeepWiki Codebase Wiki 2.0.10\n\n## Mermaid rules ({older_version(2)})\n",
                 encoding="utf-8",
             )
             report = check_repo(root)
@@ -91,7 +91,7 @@ class VersionAuditTests(unittest.TestCase):
             stale = older_version(3)
             doc = root / "chatgpt-plugin" / "skills" / "deepwiki-wiki" / "README.md"
             doc.write_text(
-                f"# DeepWiki Codebase Wiki 2.0.9\nPrevious release {stale}\n",
+                f"# DeepWiki Codebase Wiki 2.0.10\nPrevious release {stale}\n",
                 encoding="utf-8",
             )
             report = check_repo(root)
@@ -105,7 +105,7 @@ class VersionAuditTests(unittest.TestCase):
             root = Path(tmp)
             make_repo(root)
             (root / "README.zh-CN.md").write_text(
-                "![version](https://img.shields.io/badge/version-2.0.9-blue.svg)\n",
+                f"![version](https://img.shields.io/badge/version-{2}.{0}.{9}-blue.svg)\n",
                 encoding="utf-8",
             )
             report = check_repo(root)

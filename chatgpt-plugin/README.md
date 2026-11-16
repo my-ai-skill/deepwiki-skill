@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.9
+# DeepWiki Codebase Wiki 2.0.10
 
 Cross-platform plugin packaging for the original `my-ai-skill/deepwiki-skill` Agent Skill.
 
@@ -42,3 +42,12 @@ The manifest validator does not understand the codebase by itself. Phase 4 must 
 - The ChatGPT runtime adapter version is declared by `chatgpt-plugin/plugin.json` and must match this README and `skills/deepwiki-wiki/README.md`.
 - The original Agent Skill version is declared separately by the repository-root `apm.yml` and displayed in the root language READMEs. It is intentionally independent; the current root APM version is not the ChatGPT plugin version.
 - Run `python chatgpt-plugin/skills/deepwiki-wiki/tools/architecture/check_versions.py .` to audit these boundaries and stale plugin release-version references.
+
+
+## Execution lifecycle and cross-file verification
+
+- For end-to-end runtime paths, the plugin now requires a source-derived lifecycle analysis: pre-entry registration, entry point, initialization, dispatch/loop, callbacks/reporting, alternate paths, and teardown.
+- The `references/execution-lifecycle-analysis.md` guide defines lifecycle-stage, call-hierarchy, and event/cleanup views without copying conventions from unrelated frameworks.
+- `tools/architecture/audit_wiki.py` cross-checks source line ranges and literal excerpts, commit-pinned Markdown citations, PAGE_ID/DIAGRAM_ID markers, architecture-map/coverage relationship identity, and exact diagram fragments.
+- The cross-file audit is deterministic consistency checking, not a semantic proof. Phase 4 must still independently re-read the source and reconstruct the runtime path.
+- Run the architecture and Mermaid regression suites before release; report browser Mermaid.js rendering separately from static checks.

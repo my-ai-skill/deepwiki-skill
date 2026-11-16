@@ -161,5 +161,17 @@ class VersionAuditTests(unittest.TestCase):
             self.assertEqual(report["status"], "failed")
             self.assertTrue(any("RELEASE_NOTES contains stale plugin release version" in item for item in report["errors"]))
 
+    def test_stale_plugin_version_from_previous_minor_line_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            asset = root / "chatgpt-plugin" / "docs" / "compatibility.md"
+            asset.parent.mkdir(parents=True)
+            stale = f"{2}.{1}.{0}"
+            asset.write_text(f"Old adapter release {stale}", encoding="utf-8")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("compatibility.md contains stale plugin release version" in item for item in report["errors"]))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

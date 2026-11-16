@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.7
+# DeepWiki Codebase Wiki 2.0.8
 
 Cross-platform plugin packaging for the original `my-ai-skill/deepwiki-skill` Agent Skill.
 
@@ -24,3 +24,14 @@ Key upgrades:
 Run `python tools/mermaid/mermaid_lint.py path/to/page.md --check` for a non-mutating static check. To normalize safe wrapper-quoted pipe labels, write to a separate review file with `--repair --output /tmp/page.repaired.md`. Review the diff, then merge only the intended generated/AUTOGEN changes back into the original page. The temporary repaired file is not a second deliverable Wiki page. Manual content outside AUTOGEN markers must remain unchanged.
 
 The helper does not run Mermaid.js. Use `preview.html` for actual parse and SVG render; report renderer status separately as `passed`, `failed`, or `not_run`.
+
+
+## Architecture completeness and semantic review (2.0.8)
+
+- Phase 2 builds a source-derived architecture map before approving the TOC.
+- Phase 3 records page-local claims, source evidence, and relationship-to-page/diagram mappings.
+- Phase 4 re-opens key source files and checks that critical build, include, link, runtime, control/data-flow, and platform-branch relationships are explained and represented in the diagrams.
+- `_reports/architecture_coverage.json` records coverage separately from structural validation.
+- `tools/architecture/validate_coverage.py` validates the coverage manifest and its regression suite covers missing evidence, unreviewed source files, critical diagram omissions, and incomplete review states.
+
+The manifest validator does not understand the codebase by itself. Phase 4 must still perform and record a source-grounded semantic review. A structure pass or Mermaid syntax pass cannot be reported as an architecture-completeness pass.

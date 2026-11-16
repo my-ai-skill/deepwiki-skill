@@ -138,5 +138,28 @@ class VersionAuditTests(unittest.TestCase):
             self.assertEqual(report["status"], "failed")
             self.assertTrue(any(f"release.py contains stale plugin release version {stale}" in item for item in report["errors"]))
 
+    def test_old_plugin_version_in_mdx_asset_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            asset = root / "chatgpt-plugin" / "docs" / "release.mdx"
+            asset.parent.mkdir(parents=True)
+            stale = f"2.0.{6}"
+            asset.write_text(f"Release notes for {stale}", encoding="utf-8")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("release.mdx contains stale plugin release version" in item for item in report["errors"]))
+
+    def test_old_plugin_version_in_extensionless_text_asset_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            asset = root / "chatgpt-plugin" / "RELEASE_NOTES"
+            stale = f"2.0.{6}"
+            asset.write_text(f"Release notes for {stale}", encoding="utf-8")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("RELEASE_NOTES contains stale plugin release version" in item for item in report["errors"]))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

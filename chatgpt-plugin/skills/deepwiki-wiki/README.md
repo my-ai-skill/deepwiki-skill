@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.9
+# DeepWiki Codebase Wiki 2.0.10
 
 This package is the ChatGPT/portable runtime distribution for the original DeepWiki Skill. It is intentionally additive: do not modify the original `.apm/` skill, its scripts, references, templates, worker definition, or prompt on the upstream default branch.
 
@@ -50,3 +50,14 @@ The helper checks whether the declared coverage ledger is complete and internall
 ## Version boundaries
 
 The ChatGPT plugin version comes from the parent `chatgpt-plugin/plugin.json`. The original Agent Skill version remains in the repository-root `apm.yml`; these are separate deliverables and must not be forced to the same number.
+
+
+## Execution lifecycle analysis
+
+When a page covers an end-to-end runtime path, use `references/execution-lifecycle-analysis.md` to document source-derived lifecycle stages, the concrete call hierarchy, event/reporting callbacks, alternate paths, and cleanup ordering. It explicitly distinguishes pre-main registration from runtime discovery and avoids importing another framework's lifecycle conventions.
+
+## Cross-file quality gate
+
+- `tools/architecture/audit_wiki.py` checks evidence line bounds and literal excerpts against local source files, source citations against the pinned commit, PAGE_ID/DIAGRAM_ID markers, diagram counts, relationship IDs across the architecture map and coverage ledger, representation anchors, and exact Mermaid fragments.
+- Run it after `validate_coverage.py` and include `_reports/cross_file_audit.json` in the Wiki reports.
+- This gate checks traceability and declared relationships; it cannot prove complex semantic correctness or discover relationships missing from both maps. Independent source rereading remains required.

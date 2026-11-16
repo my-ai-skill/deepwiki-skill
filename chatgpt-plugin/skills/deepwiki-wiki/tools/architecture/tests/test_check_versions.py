@@ -113,5 +113,28 @@ class VersionAuditTests(unittest.TestCase):
             self.assertTrue(any("README.zh-CN.md badge" in item for item in report["errors"]))
 
 
+    def test_old_plugin_version_in_json_metadata_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            manifest_path = root / "chatgpt-plugin" / "plugin.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["description"] = "Adapter release 2.0.6"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("plugin.json contains stale plugin release version 2.0.6" in item for item in report["errors"]))
+
+    def test_old_plugin_version_in_python_asset_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            asset = root / "chatgpt-plugin" / "tools" / "release.py"
+            asset.parent.mkdir(parents=True)
+            asset.write_text('PLUGIN_BASELINE = "2.0.6"\\n', encoding="utf-8")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("release.py contains stale plugin release version 2.0.6" in item for item in report["errors"]))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

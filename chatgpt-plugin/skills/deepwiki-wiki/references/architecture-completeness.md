@@ -49,7 +49,7 @@ For each page:
 
 1. Read all mapped source files. Follow important symbols and dependencies into additional files when the mapped files do not establish the complete behavior.
 2. Build a page-local evidence/relationship ledger before writing prose or Mermaid.
-3. For each important claim or relationship, record exact source evidence (path and real line range), importance (\`critical\` or \`supporting\`), and where it is explained (\`prose\`, \`table\`, or \`diagram\` plus a location).
+3. For each important claim or relationship, record exact source evidence (path, real inclusive line range, and a short literal `contains` excerpt that occurs inside that range), importance (`critical` or `supporting`), and where it is explained. Prose/table representations require an exact `representation.anchor` phrase present in the page; diagram representations require `representation.diagram_id` and an exact `representation.diagram_fragment` present in that Mermaid block.
 4. Explain important conditional branches explicitly. Do not describe only the default branch when the code has materially different platform/compiler/configuration branches.
 5. Build diagrams from the ledger. Every arrow must have an unambiguous relation meaning and source evidence. The diagram must include all critical relationships inside its declared scope. Supporting relationships may be omitted only with an explicit reason.
 6. Check that the page title, its promised scope, prose, tables, and diagrams agree. A section titled “build and test entrypoints” is incomplete if it explains the implementation aggregation but omits the actual test entry targets or entry functions.

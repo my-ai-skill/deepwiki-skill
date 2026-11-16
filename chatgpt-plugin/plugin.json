@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "deepwiki-codebase-wiki",
-  "version": "2.0.6",
-  "description": "Cross-platform DeepWiki workflow with deterministic Mermaid flowchart edge-label repair, regression tests, and separate authoring/render validation.",
+  "version": "2.0.7",
+  "description": "Cross-platform codebase wiki generation with source-grounded documentation, deterministic Mermaid edge-label repair, regression tests, and separate authoring/render validation.",
   "author": {
     "name": "chenxi"
   },
@@ -24,11 +24,11 @@
       "interface": {
         "displayName": "DeepWiki Codebase Wiki",
         "shortDescription": "Cross-platform codebase wikis",
-        "longDescription": "An expanded ChatGPT package for the original DeepWiki Skill. It preserves the original six phases and workflow-runner execution contract, uses native subagents and page-level parallelism when supported, and falls back sequentially otherwise. Version 2.0.6 adds a tested deterministic static lint/repair helper for quoted pipe-delimited flowchart edge labels, while preserving node labels, middle-label syntax, other diagram types, and separate Mermaid.js parser/render outcomes.",
+        "longDescription": "An additive ChatGPT runtime adapter for the original DeepWiki Skill. It preserves the six-phase workflow-runner contract, page-level workers when native concurrency is available, and truthful sequential fallback elsewhere. Version 2.0.7 synchronizes package documentation with the deterministic Mermaid flowchart edge-label lint/repair helper and keeps authoring-policy checks separate from actual parser/render outcomes.",
         "developerName": "chenxi",
         "category": "Developer tools",
         "capabilities": [],
-        "defaultPrompt": "Use DeepWiki's original six-phase workflow and preserve the workflow-runner contract. Before writing or validating Mermaid, read references/mermaid-authoring.md and references/mermaid-engine.md. For quoted pipe-delimited flowchart edge labels, use tools/mermaid/mermaid_lint.py: run --check; when safe, write a separate repaired output with --repair --output, review it, merge only generated/AUTOGEN changes, and re-run --check. Never overwrite input or alter manual content. Preserve node-label quotes, middle-label syntax such as A -- \"label\" --> B, and non-flowchart diagrams. Static authoring lint is not Mermaid parsing. Report authoring_lint as passed/repaired/unresolved separately from renderer passed/failed/not_run. Only actual Mermaid.js parse plus SVG render or Mermaid CLI can produce renderer passed. Run the packaged unittest regression suite when Python is available."
+        "defaultPrompt": "Use DeepWiki's original six-phase workflow and preserve the workflow-runner contract. Before writing, repairing, or validating any Mermaid diagram, read the packaged references/mermaid-authoring.md and references/mermaid-engine.md. These packaged references define the plugin's Mermaid authoring policy: use unquoted text inside pipe-delimited flowchart edge labels (A -->|Yes| B), while quoting node labels where appropriate. This is a deterministic style normalization rule, not a claim that Mermaid.js necessarily rejects a quoted label. Use tools/mermaid/mermaid_lint.py --check; when safe, use --repair --output to write a separate review copy, inspect the diff, and merge only intended generated/AUTOGEN changes back into the original page. Never overwrite the input or alter manual content outside AUTOGEN markers. Preserve middle-label syntax such as A -- \"label\" --> B and non-flowchart diagrams. Re-run static lint after repair. Static authoring lint is not Mermaid parsing. Report authoring_lint as passed/repaired/unresolved separately from renderer passed/failed/not_run. Only actual Mermaid.js parse plus SVG render or Mermaid CLI execution can produce renderer passed. If no renderer ran, renderer status is not_run. Run the packaged unittest regression suite when Python is available. On hosts with native concurrent Subagents, dispatch one independent workflow-runner per TOC page in parallel; otherwise use the honest sequential fallback."
       }
     }
   }

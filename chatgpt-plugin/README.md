@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.6
+# DeepWiki Codebase Wiki 2.0.7
 
 Cross-platform plugin packaging for the original `my-ai-skill/deepwiki-skill` Agent Skill.
 
@@ -11,7 +11,7 @@ Key upgrades:
 - Clearly report actual validation level and runtime capability; never overstate static checks as real rendering.
 
 
-## Mermaid validation correctness (2.0.6)
+## Mermaid validation correctness (2.0.7)
 
 - The plugin's authoring policy standardizes pipe-delimited flowchart edge labels as unquoted (`A -->|Yes| B`). The static lint/repair helper normalizes wrapper-quoted labels; this is an authoring-policy check, not proof that Mermaid.js itself rejects the original text.
 - Static checks are not a Mermaid parser. Runtime outcomes are tri-state: `passed`, `failed`, or `not_run`.
@@ -19,7 +19,7 @@ Key upgrades:
 - Phase 4 requires actual Mermaid.js parse/render or Mermaid CLI success for every block before reporting an overall pass.
 
 
-## Deterministic Mermaid authoring check (2.0.6)
+## Deterministic Mermaid authoring check (2.0.7)
 
 Run `python tools/mermaid/mermaid_lint.py path/to/page.md --check` for a non-mutating static check. To normalize safe wrapper-quoted pipe labels, write to a separate review file with `--repair --output /tmp/page.repaired.md`. Review the diff, then merge only the intended generated/AUTOGEN changes back into the original page. The temporary repaired file is not a second deliverable Wiki page. Manual content outside AUTOGEN markers must remain unchanged.
 

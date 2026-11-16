@@ -32,16 +32,24 @@ jobs:
 
       - name: Run architecture and cross-file regression tests
         working-directory: chatgpt-plugin/skills/deepwiki-wiki
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
         run: python -m unittest discover -s tools/architecture/tests -v
 
       - name: Run Mermaid regression tests
         working-directory: chatgpt-plugin/skills/deepwiki-wiki
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
         run: python -m unittest discover -s tools/mermaid/tests -v
 
       - name: Create plugin package and source manifest
         shell: bash
         run: |
           set -euo pipefail
+          # Test runners can emit bytecode even when the environment setting is absent.
+          # Never ship interpreter caches in the plugin artifact.
+          find chatgpt-plugin -type d -name __pycache__ -prune -exec rm -rf {} +
+          find chatgpt-plugin -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
           cd chatgpt-plugin
           zip -qr ../deepwiki-codebase-wiki-2.0.10.zip .
           cd ..

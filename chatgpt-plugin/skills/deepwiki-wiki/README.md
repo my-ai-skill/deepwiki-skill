@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.4
+# DeepWiki Codebase Wiki 2.0.6
 
 This package is the ChatGPT/portable runtime distribution for the original DeepWiki Skill. It is intentionally additive: do not modify the original `.apm/` skill, its scripts, references, templates, worker definition, or prompt on the upstream default branch.
 
@@ -20,9 +20,16 @@ Serve the preview directory over HTTP because browsers may block local ES module
 Ask the host agent to use this skill for a repository, TOC-based generation, structure-only generation, or incremental update. The host adapter must report which capabilities were actually available: subagents, shell/Python/Node, Mermaid.js, Mermaid CLI, repository access, and write access.
 
 
-## Mermaid validation correctness (2.0.4)
+## Mermaid validation correctness (2.0.6)
 
-- Pipe-delimited flowchart edge labels are unquoted (`A -->|Yes| B`); quoted pipe labels are rejected by static regression lint.
+- The plugin's authoring policy standardizes pipe-delimited flowchart edge labels as unquoted (`A -->|Yes| B`). The static lint/repair helper normalizes wrapper-quoted labels; this is an authoring-policy check, not proof that Mermaid.js itself rejects the original text.
 - Static checks are not a Mermaid parser. Runtime outcomes are tri-state: `passed`, `failed`, or `not_run`.
 - Mermaid CLI unavailability is reported as `not_run`, never as a diagram syntax failure or a successful validation.
 - Phase 4 requires actual Mermaid.js parse/render or Mermaid CLI success for every block before reporting an overall pass.
+
+
+## Deterministic Mermaid authoring check (2.0.6)
+
+Run `python tools/mermaid/mermaid_lint.py path/to/page.md --check` for a non-mutating static check. To normalize safe wrapper-quoted pipe labels, write to a separate review file with `--repair --output /tmp/page.repaired.md`. Review the diff, then merge only the intended generated/AUTOGEN changes back into the original page. The temporary repaired file is not a second deliverable Wiki page. Manual content outside AUTOGEN markers must remain unchanged.
+
+The helper does not run Mermaid.js. Use `preview.html` for actual parse and SVG render; report renderer status separately as `passed`, `failed`, or `not_run`.

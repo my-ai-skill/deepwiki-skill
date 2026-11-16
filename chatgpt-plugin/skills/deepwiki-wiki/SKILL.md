@@ -9,7 +9,7 @@ description: Generate, structure, validate, summarize, or incrementally update c
 
 This package is an additive runtime adaptation of `my-ai-skill/deepwiki-skill`, not a replacement or simplification of its core. The upstream repository's `.apm/skills/wiki/`, references, scripts, templates, `.apm/agents/workflow-runner.agent.md`, `.apm/prompts/gen-wiki.prompt.md`, and `apm.yml` are the canonical source. Keep those upstream files unchanged. Platform-specific behavior belongs in this package's adapters and supporting files.
 
-Preserve all six original phases, their inputs/outputs, phase specifications, validation criteria, PAGE_ID/AUTOGEN conventions, line-level evidence policy, and incremental-update behavior. Do not silently skip phases or replace their requirements with a generic summary workflow.
+Preserve all six original phases, their inputs/outputs, phase specifications, validation criteria, PAGE_ID/AUTOGEN conventions, line-level evidence policy, and incremental-update behavior. Do not silently skip phases or replace their requirements with a generic summary workflow. The adapter adds a mandatory architecture-completeness gate: read `references/architecture-completeness.md` before TOC design, page writing, and validation. Structural validity, citations, Mermaid syntax, and semantic completeness are separate outcomes.
 
 ## 1. Runtime capability discovery
 
@@ -47,6 +47,8 @@ Pass the corresponding fields supported by the host:
 - `language`: requested locale; otherwise use the conversation language and project TOC language if defined.
 - `mode`: `automatic`, `structure-only`, `toc-based`, or `incremental`.
 - `page_id`: for a page-scoped `doc-write` worker, the one page this worker may generate.
+- `architecture_map`: the source-derived page/relationship plan from `_context/architecture_map.json`, when applicable.
+- `coverage_ledger`: the page-local claim/relationship evidence ledger returned by `doc-write` and merged during validation.
 
 The phase specification is the source of truth. A worker must not execute multiple phases in one invocation. It must stop on a failing required action and return the failed action, observed output, and minimal recovery step.
 
@@ -68,7 +70,7 @@ When the host genuinely supports concurrent subagents:
 1. Parse the existing TOC and enumerate pages.
 2. Dispatch one foreground `workflow-runner` task per page, each with `phase_id=doc-write` and a unique `page_id`.
 3. Each worker reads only the source files mapped to that page and any additional files needed to verify dependencies.
-4. Each worker returns one page artifact plus its inspected-source list, citations, Mermaid blocks, and validation notes. Workers must not concurrently overwrite the shared output file or another page's output.
+4. Each worker returns one page artifact plus its inspected-source list, citations, Mermaid blocks, validation notes, and a page-local claim/relationship coverage ledger. The ledger must identify compile/include/link/runtime/control/data-flow/platform/test relationships that are relevant to that page; do not equate a list of cited files with relationship coverage. Workers must not concurrently overwrite the shared output file or another page's output.
 5. Wait for every page worker to finish before Phase 4. Retry only failed page tasks, without regenerating successful pages.
 6. The orchestrator checks duplicate/missing page IDs, combines artifacts, checks cross-page links and terminology, then starts Phase 4.
 
@@ -112,7 +114,7 @@ Resolve repository identity, default branch, exact inspected ref/commit SHA, pro
 
 ### Phase 2 — `toc-design`
 
-Design a source-grounded, navigable TOC. Choose project-relevant pages and avoid filler. Starting page-count guidance: <10 source files: 3–5 pages; 10–50: 5–8; 50–200: 8–12; >200: 10–15, adjusted for complexity. Use globally unique page IDs `{repo_name}_{NN}_{page-name}` and section IDs derived from page IDs. Assign real paths/globs to each page and relevant section. Set `autogen`, `diagrams_needed`, `diagram_types`, and `related_pages`. Validate all IDs, filenames, references, diagram types, and commit SHA.
+Design a source-grounded, navigable TOC. Choose project-relevant pages and avoid filler. Starting page-count guidance: <10 source files: 3–5 pages; 10–50: 5–8; 50–200: 8–12; >200: 10–15, adjusted for complexity. Use globally unique page IDs `{repo_name}_{NN}_{page-name}` and section IDs derived from page IDs. Assign real paths/globs to each page and relevant section. Set `autogen`, `diagrams_needed`, `diagram_types`, and `related_pages`. In addition, read `references/architecture-completeness.md`, inspect actual build manifests, entry points, representative implementation files and tests, then produce `_context/architecture_map.json`. The map must enumerate relevant source files, important symbols, relationship types/directions/conditions (build inputs, includes/imports, link dependencies, runtime entry/call paths, data/control flow, platform/configuration branches, and test mappings where present), and map each high-importance topic to a TOC page/section. For every planned diagram, define its intended scope and relationship IDs. Do not approve the TOC until all discovered critical topics have a page/section destination. Validate all IDs, filenames, references, diagram types, and commit SHA.
 
 Required TOC shape:
 
@@ -143,7 +145,7 @@ notes: []
 
 ### Phase 3 — `doc-write`
 
-For each page and section, read the mapped source files, resolving globs and additional implementation dependencies as needed. Explain the high-level purpose, architecture role, inputs/outputs, control flow, important data structures, APIs, error handling, and module interactions where supported. Use tables for interfaces/configuration/data structures, exact code excerpts when useful, and Mermaid only when the TOC requests it and the code supports the depicted relationships. Include related-page links and relevant-source lists. Preserve content outside generated markers on updates.
+For each page and section, read the mapped source files, resolving globs and additional implementation dependencies as needed. Before drafting, create a page-local evidence/relationship ledger from the architecture map and the actual code. Explain the high-level purpose, architecture role, inputs/outputs, control flow, important data structures, APIs, error handling, module interactions, and materially different conditional/platform branches where supported. Use tables for interfaces/configuration/data structures, exact code excerpts when useful, and Mermaid only when the TOC requests it and the code supports the depicted relationships. Build each diagram from source-verified relationship records: label edge semantics (for example compile input vs include vs link dependency vs runtime call), include every critical relationship within the diagram's declared scope, and record justified omissions of supporting relationships. Check that title, prose, tables, and diagrams agree in scope. The page output must include its claim/relationship coverage ledger with source paths and real line ranges plus the page location where each item is explained. A citation count or a source-file list alone is not coverage. Preserve content outside generated markers on updates.
 
 Required page conventions:
 
@@ -155,11 +157,11 @@ Required page conventions:
 
 ### Phase 4 — `validate-docs`
 
-Check that all TOC pages exist; PAGE_ID values are correct and unique; each generated section has exactly one balanced matching AUTOGEN pair; manual sections are unmarked; headings and internal links are valid; citations point to the inspected repository commit/path/line range; and no claims lack evidence. For Mermaid, run the packaged tools/mermaid/mermaid_lint.py static check. If it finds safely repairable wrapper-quoted pipe labels, write a repaired copy with --repair --output, review and merge only the affected generated/AUTOGEN content, then re-run --check. Never overwrite the input or alter manual content outside AUTOGEN markers. Record authoring lint as passed, repaired, or unresolved, separately from renderer status. Validate with Mermaid.js parse plus SVG render or Mermaid CLI when available; if no renderer ran, use not_run, not failed. If unresolved findings remain, report exact lines and do not declare authoring validation successful.
+Check that all TOC pages exist; PAGE_ID values are correct and unique; each generated section has exactly one balanced matching AUTOGEN pair; manual sections are unmarked; headings and internal links are valid; citations point to the inspected repository commit/path/line range; and no claims lack evidence. Then perform a separate semantic coverage review using `references/architecture-completeness.md`: re-open key source files and reconstruct important relationships independently of the page draft; compare page scope against the architecture map; verify that every relevant source inventory item is reviewed or explicitly not applicable; verify critical claims/relationships have evidence and are represented in prose/table/diagram; and audit every diagram's nodes, arrows, direction, edge semantics, platform conditions, and in-scope omissions against source. Fix omissions in generated/AUTOGEN content and repeat the review. Generate `_reports/architecture_coverage.json` and run `tools/architecture/validate_coverage.py`; the helper validates report completeness/shape but does not replace the source reread. A missing semantic review or any unreviewed/gap item means content coverage is incomplete; a critical diagram omission or malformed/evidenceless record fails. For Mermaid, run the packaged tools/mermaid/mermaid_lint.py static check. If it finds safely repairable wrapper-quoted pipe labels, write a repaired copy with --repair --output, review and merge only the affected generated/AUTOGEN content, then re-run --check. Never overwrite the input or alter manual content outside AUTOGEN markers. Record authoring lint as passed, repaired, or unresolved, separately from renderer status. Validate with Mermaid.js parse plus SVG render or Mermaid CLI when available; if no renderer ran, use not_run, not failed. If unresolved findings remain, report exact lines and do not declare authoring validation successful.
 
 ### Phase 5 — `doc-summary`
 
-Generate `docs/wiki/_reports/SUMMARY.md` including repository/ref, mode, locale, output directory, source scope, page list, subsystem coverage, citation/source coverage, structure checks, Mermaid checks, and known gaps. Distinguish static checks from actual renderer/CLI execution. Never report a successful runtime test that was not run.
+Generate `docs/wiki/_reports/SUMMARY.md` including repository/ref, mode, locale, output directory, source scope, page list, subsystem coverage, citation/source coverage, structure checks, architecture/content coverage, diagram-semantic review, Mermaid authoring and renderer outcomes, and known gaps. Report structure status, content coverage status, diagram semantic status, Mermaid authoring status, and Mermaid renderer status independently. A complete Wiki run must not be reported as fully passed when architecture coverage is incomplete/failed or renderer is not_run. Distinguish static checks from actual renderer/CLI execution. Never report a successful runtime test that was not run.
 
 ### Phase 6 — `incremental-sync`
 
@@ -217,7 +219,7 @@ Do not implement provider-specific logic inside core phase specs. Put it in a ru
 
 Repository access is read-only by default. For any write, require an explicit target repository and scope, use a dedicated feature branch, inspect current branch/head/file SHAs first, commit only the authorized paths, then fetch the resulting branch/commit/files to verify. Never modify the original upstream Skill on the default branch when the task is to develop this plugin.
 
-Final report must state: repo and exact ref inspected; modes/phases actually completed; pages/files created; worker strategy actually used (native parallel workers vs sequential fallback); Mermaid validation level actually run; source coverage; commit or artifact location; and any failed/unavailable capabilities. Never describe a fallback as if the original capability ran.
+Final report must state: repo and exact ref inspected; modes/phases actually completed; pages/files created; worker strategy actually used (native parallel workers vs sequential fallback); architecture/content coverage and diagram-semantic review status; Mermaid validation level actually run; source coverage; commit or artifact location; and any failed/unavailable capabilities. Never describe a fallback as if the original capability ran.
 
 
 For the canonical edge-label examples and regression rules, read `references/mermaid-authoring.md` before authoring or repairing diagrams.

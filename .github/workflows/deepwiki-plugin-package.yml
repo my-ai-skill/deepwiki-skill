@@ -42,30 +42,45 @@ jobs:
           PYTHONDONTWRITEBYTECODE: "1"
         run: python -m unittest discover -s tools/mermaid/tests -v
 
-      - name: Create plugin package and source manifest
+      - name: Create versioned plugin package and source manifest
+        id: package
         shell: bash
         run: |
           set -euo pipefail
+
+          PLUGIN_VERSION="$(python -c 'import json; from pathlib import Path; print(json.loads(Path("chatgpt-plugin/plugin.json").read_text(encoding="utf-8"))["version"])')"
+          if [[ ! "$PLUGIN_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid plugin semantic version: $PLUGIN_VERSION"
+            exit 1
+          fi
+
+          PACKAGE="deepwiki-codebase-wiki-${PLUGIN_VERSION}.zip"
+          MANIFEST="deepwiki-codebase-wiki-${PLUGIN_VERSION}.manifest.txt"
+
           # Test runners can emit bytecode even when the environment setting is absent.
           # Never ship interpreter caches in the plugin artifact.
           find chatgpt-plugin -type d -name __pycache__ -prune -exec rm -rf {} +
           find chatgpt-plugin -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete
-          cd chatgpt-plugin
-          zip -qr ../deepwiki-codebase-wiki-2.0.10.zip .
-          cd ..
+
+          (cd chatgpt-plugin && zip -qr "../${PACKAGE}" .)
+
           {
-            echo "plugin_version=$(python -c 'import json; print(json.load(open("chatgpt-plugin/plugin.json", encoding="utf-8"))["version"])')"
+            echo "plugin_version=${PLUGIN_VERSION}"
             echo "source_commit=${GITHUB_SHA}"
-            echo "package_sha256=$(sha256sum deepwiki-codebase-wiki-2.0.10.zip | awk '{print $1}')"
+            echo "package_sha256=$(sha256sum "${PACKAGE}" | awk '{print $1}')"
             echo "package_files=$(find chatgpt-plugin -type f | wc -l | tr -d ' ')"
-          } > deepwiki-codebase-wiki-2.0.10.manifest.txt
+          } > "${MANIFEST}"
+
+          echo "plugin_version=${PLUGIN_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "package=${PACKAGE}" >> "$GITHUB_OUTPUT"
+          echo "manifest=${MANIFEST}" >> "$GITHUB_OUTPUT"
 
       - name: Upload the tested plugin package
         uses: actions/upload-artifact@v4
         with:
-          name: deepwiki-codebase-wiki-2.0.10
+          name: deepwiki-codebase-wiki-${{ steps.package.outputs.plugin_version }}
           path: |
-            deepwiki-codebase-wiki-2.0.10.zip
-            deepwiki-codebase-wiki-2.0.10.manifest.txt
+            ${{ steps.package.outputs.package }}
+            ${{ steps.package.outputs.manifest }}
           if-no-files-found: error
           retention-days: 14

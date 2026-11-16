@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Check DeepWiki plugin release metadata without conflating the upstream APM skill version."""
+"""Audit ChatGPT plugin release versions across package text files.
+
+The ChatGPT adapter and root APM Agent Skill are separate deliverables.
+"""
 from __future__ import annotations
 
 import argparse
@@ -8,9 +11,16 @@ import re
 from pathlib import Path
 from typing import Any
 
-SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
-BADGE_RE = re.compile(r"version-([0-9]+\.[0-9]+\.[0-9]+)-blue\.svg")
-VERSION_HEADING_RE = re.compile(r"^#{1,6}\s+.*?\((\d+\.\d+\.\d+)\)\s*$", re.MULTILINE)
+SEMVER_RE = re.compile(r"^\\d+\\.\\d+\\.\\d+$")
+SEMVER_TOKEN_RE = re.compile(r"(?<![\\d.])\\d+\\.\\d+\\.\\d+(?![\\d.])")
+BADGE_RE = re.compile(r"version-([0-9]+\\.[0-9]+\\.[0-9]+)-blue\\.svg")
+VERSION_HEADING_RE = re.compile(r"^#{1,6}\\s+.*?\\((\\d+\\.\\d+\\.\\d+)\\)\\s*$", re.MULTILINE)
+
+# Scan package source, manifests, prompts, and docs rather than Markdown alone.
+TEXT_SUFFIXES = {
+    ".md", ".json", ".py", ".yaml", ".yml", ".js", ".mjs", ".html",
+    ".txt", ".toml", ".sh", ".css", ".xml", ".ini", ".cfg",
+}
 
 
 def _read_json(path: Path, errors: list[str]) -> dict[str, Any] | None:
@@ -26,6 +36,12 @@ def _read_json(path: Path, errors: list[str]) -> dict[str, Any] | None:
         errors.append(f"{path.as_posix()} must contain a JSON object")
         return None
     return value
+
+
+def _iter_package_text_files(package_root: Path):
+    for path in sorted(package_root.rglob("*")):
+        if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES:
+            yield path
 
 
 def check_repo(root: Path) -> dict[str, Any]:
@@ -63,35 +79,40 @@ def check_repo(root: Path) -> dict[str, Any]:
             )
 
     package_root = root / "chatgpt-plugin"
-    if package_root.exists():
-        version_family = plugin_version.rsplit(".", 1)[0] if plugin_version else ""
-        version_literal_re = re.compile(rf"(?<!\d){re.escape(version_family)}\.\d+(?!\d)") if version_family else None
-        for path in package_root.rglob("*.md"):
+    if package_root.exists() and plugin_version:
+        version_family = ".".join(plugin_version.split(".")[:2])
+        version_literal_re = re.compile(
+            rf"(?<![\\d.]){re.escape(version_family)}\\.\\d+(?![\\d.])"
+        )
+        for path in _iter_package_text_files(package_root):
             try:
                 content = path.read_text(encoding="utf-8")
-            except OSError as exc:
+            except (OSError, UnicodeError) as exc:
                 errors.append(f"cannot read {path.relative_to(root).as_posix()}: {exc}")
                 continue
+            relative = path.relative_to(root).as_posix()
             for old_version in VERSION_HEADING_RE.findall(content):
                 if old_version != plugin_version:
                     errors.append(
-                        f"{path.relative_to(root).as_posix()} contains a stale versioned heading "
-                        f"({old_version}); use an unversioned feature heading or current release"
+                        f"{relative} contains a stale versioned heading ({old_version}); "
+                        "use an unversioned feature heading or current release"
                     )
-            if version_literal_re:
-                for seen_version in sorted(set(version_literal_re.findall(content))):
-                    if seen_version != plugin_version:
-                        errors.append(
-                            f"{path.relative_to(root).as_posix()} contains stale plugin release "
-                            f"version {seen_version}; current plugin version is {plugin_version}"
-                        )
+            for seen_version in sorted(set(version_literal_re.findall(content))):
+                if seen_version != plugin_version:
+                    errors.append(
+                        f"{relative} contains stale plugin release version {seen_version}; "
+                        f"current plugin version is {plugin_version}"
+                    )
 
     # The root APM package is the original Agent Skill, not the ChatGPT adapter.
     apm_path = root / "apm.yml"
     apm_version = ""
     try:
         apm_text = apm_path.read_text(encoding="utf-8")
-        match = re.search(r"(?m)^version:\s*['\"]?([0-9]+\.[0-9]+\.[0-9]+)['\"]?\s*$", apm_text)
+        match = re.search(
+            r"(?m)^version:\\s*['\\"]?([0-9]+\\.[0-9]+\\.[0-9]+)['\\"]?\\s*$",
+            apm_text,
+        )
         if not match:
             errors.append("apm.yml must declare a semantic version")
         else:

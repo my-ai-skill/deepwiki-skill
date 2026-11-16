@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.7
+# DeepWiki Codebase Wiki 2.0.8
 
 This package is the ChatGPT/portable runtime distribution for the original DeepWiki Skill. It is intentionally additive: do not modify the original `.apm/` skill, its scripts, references, templates, worker definition, or prompt on the upstream default branch.
 
@@ -33,3 +33,15 @@ Ask the host agent to use this skill for a repository, TOC-based generation, str
 Run `python tools/mermaid/mermaid_lint.py path/to/page.md --check` for a non-mutating static check. To normalize safe wrapper-quoted pipe labels, write to a separate review file with `--repair --output /tmp/page.repaired.md`. Review the diff, then merge only the intended generated/AUTOGEN changes back into the original page. The temporary repaired file is not a second deliverable Wiki page. Manual content outside AUTOGEN markers must remain unchanged.
 
 The helper does not run Mermaid.js. Use `preview.html` for actual parse and SVG render; report renderer status separately as `passed`, `failed`, or `not_run`.
+
+
+## Architecture completeness gate (2.0.8)
+
+A structurally valid Wiki can still omit important source relationships. Version 2.0.8 adds a source-derived architecture map before TOC design, page-local claim/relationship ledgers during writing, and a separate Phase 4 semantic review. The reviewer re-opens key source files and checks diagram nodes/edges, direction, relation type, conditional branches, and omissions against source evidence.
+
+- Policy: `references/architecture-completeness.md`
+- Coverage manifest validator: `tools/architecture/validate_coverage.py`
+- Regression tests: `python -m unittest discover -s tools/architecture/tests -v`
+- Required report: `docs/wiki/_reports/architecture_coverage.json`
+
+The helper checks whether the declared coverage ledger is complete and internally consistent. It is not a source-code analyzer and cannot find a relationship omitted from the ledger; independent source rereading in Phase 4 remains mandatory. Structural validation, content coverage, diagram-semantic review, Mermaid authoring lint, and actual Mermaid rendering are separate statuses.

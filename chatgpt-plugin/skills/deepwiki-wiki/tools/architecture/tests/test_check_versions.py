@@ -133,7 +133,7 @@ class VersionAuditTests(unittest.TestCase):
             asset = root / "chatgpt-plugin" / "tools" / "release.py"
             asset.parent.mkdir(parents=True)
             stale = f"2.0.{6}"
-            asset.write_text(f"PLUGIN_BASELINE = \"{stale}\"\\n", encoding="utf-8")
+            asset.write_text(f"PLUGIN_BASELINE = \"{stale}\"\n", encoding="utf-8")
             report = check_repo(root)
             self.assertEqual(report["status"], "failed")
             self.assertTrue(any(f"release.py contains stale plugin release version {stale}" in item for item in report["errors"]))

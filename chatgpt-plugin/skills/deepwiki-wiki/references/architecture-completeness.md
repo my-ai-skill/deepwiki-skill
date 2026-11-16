@@ -95,6 +95,7 @@ The file \`_reports/architecture_coverage.json\` uses schema version \`1.0\`:
     {
       "page_id": "repo_01_architecture",
       "filename": "01_architecture.md",
+      "diagram_count": 1,
       "source_inventory": [
         {
           "path": "src/module.cc",
@@ -153,7 +154,7 @@ Field rules:
 - Every evidence line range must be checked against the exact source commit; the helper checks shape only, not GitHub line existence or semantic relevance.
 - Relationship \`kind\` must name the actual relation type. Do not use a generic arrow when the distinction matters.
 - Each diagram audit must account for every relationship ID in its declared scope as either represented or omitted with a reason. Omitting a critical in-scope relationship is an error. A supporting relationship omitted from a diagram may be acceptable when the relationship is explained elsewhere and the omission reason is stated.
-- Every Mermaid diagram in the page must have exactly one diagram audit. If the renderer is unavailable, record that separately in the Mermaid report; it does not waive semantic review.
+- Set `diagram_count` to the actual number of fenced Mermaid blocks in the page. The validator requires `diagram_count == len(diagram_audits)`; every Mermaid diagram must have exactly one audit. If the renderer is unavailable, record that separately in the Mermaid report; it does not waive semantic review.
 
 ## Quality status and reporting
 

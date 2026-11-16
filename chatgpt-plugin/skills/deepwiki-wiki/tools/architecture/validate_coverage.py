@@ -64,6 +64,9 @@ def validate_manifest(data: dict[str, Any]) -> dict[str, Any]:
         filename = page.get("filename")
         if not filename:
             issue(errors, "filename", "filename is required", page_id)
+        diagram_count = page.get("diagram_count")
+        if not isinstance(diagram_count, int) or diagram_count < 0:
+            issue(errors, "diagram_count", "diagram_count must be a non-negative integer", page_id)
 
         inventory = page.get("source_inventory")
         if not isinstance(inventory, list) or not inventory:
@@ -119,6 +122,9 @@ def validate_manifest(data: dict[str, Any]) -> dict[str, Any]:
         if not isinstance(diagram_audits, list):
             issue(errors, "diagram_audits", "diagram_audits must be an array, even when empty", page_id)
             diagram_audits = []
+        if isinstance(diagram_count, int) and diagram_count >= 0 and len(diagram_audits) != diagram_count:
+            issue(errors, "diagram_audit_count",
+                  f"expected {diagram_count} diagram audit(s), found {len(diagram_audits)}", page_id)
         diagram_ids: set[str] = set()
         for audit in diagram_audits:
             if not isinstance(audit, dict):

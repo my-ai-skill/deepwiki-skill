@@ -1,4 +1,5 @@
 interface:
   display_name: "DeepWiki Codebase Wiki"
   short_description: "Cross-platform codebase wikis"
-  default_prompt: "Use DeepWiki's original six-phase workflow, preserve workflow-runner semantics, and generate evidence-based repository documentation with validated diagrams."
+  default_prompt: >-
+    Use the six-phase DeepWiki workflow and read references/architecture-completeness.md before TOC design, page writing, and validation. Build a source-derived architecture map, page-local claim/relationship ledgers, and a separate Phase 4 semantic source reread. Audit every diagram's scope, nodes, arrows, edge meaning, platform conditions, and omissions against code. Produce architecture_coverage.json and run tools/architecture/validate_coverage.py. Run tools/architecture/check_versions.py to verify the ChatGPT adapter version separately from the root APM Agent Skill version. Structural validity, citation validity, content coverage, diagram semantics, Mermaid authoring lint, and Mermaid rendering are independent results.

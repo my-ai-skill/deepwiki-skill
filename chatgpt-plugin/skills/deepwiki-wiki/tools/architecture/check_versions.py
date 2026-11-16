@@ -87,7 +87,7 @@ def check_repo(root: Path) -> dict[str, Any]:
     if package_root.exists() and plugin_version:
         version_major = plugin_version.split(".")[0]
         version_literal_re = re.compile(
-            rf"(?<![\\d.]){re.escape(version_major)}\\.\\d+\\.\\d+(?![\\d.])"
+            rf"(?<![\d.]){re.escape(version_major)}\.\d+\.\d+(?![\d.])"
         )
         for path, content in _iter_package_text_files(package_root):
             if content is None:

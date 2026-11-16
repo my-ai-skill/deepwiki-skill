@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "deepwiki-codebase-wiki",
-  "version": "2.0.4",
-  "description": "Cross-platform DeepWiki workflow with source-grounded documentation, page-level orchestration, and corrected Mermaid edge-label authoring plus explicit parser/render validation.",
+  "version": "2.0.6",
+  "description": "Cross-platform DeepWiki workflow with deterministic Mermaid flowchart edge-label repair, regression tests, and separate authoring/render validation.",
   "author": {
     "name": "chenxi"
   },
@@ -24,11 +24,11 @@
       "interface": {
         "displayName": "DeepWiki Codebase Wiki",
         "shortDescription": "Cross-platform codebase wikis",
-        "longDescription": "An expanded ChatGPT package for the original DeepWiki Skill. It preserves the original six phases and workflow-runner execution contract, uses native subagents and page-level parallelism when the host supports them, falls back to the same phase contract when it does not, and provides a portable browser-based Mermaid.js preview without requiring an MCP server. The original upstream .apm skill remains untouched in the repository's main branch. Version 2.0.4 corrects pipe-delimited Mermaid edge-label syntax and requires explicit parser/render outcomes.",
+        "longDescription": "An expanded ChatGPT package for the original DeepWiki Skill. It preserves the original six phases and workflow-runner execution contract, uses native subagents and page-level parallelism when supported, and falls back sequentially otherwise. Version 2.0.6 adds a tested deterministic static lint/repair helper for quoted pipe-delimited flowchart edge labels, while preserving node labels, middle-label syntax, other diagram types, and separate Mermaid.js parser/render outcomes.",
         "developerName": "chenxi",
         "category": "Developer tools",
         "capabilities": [],
-        "defaultPrompt": "Use DeepWiki's original six-phase workflow to create or update source-grounded documentation. Preserve the workflow-runner contract and use page-level subagents when the host genuinely supports them; otherwise use sequential fallback. Before creating or repairing Mermaid diagrams, read the packaged references/mermaid-authoring.md and references/mermaid-engine.md. Never quote pipe-delimited flowchart edge labels (write A -->|Yes| B, not A -->|\"Yes\"| B). Treat static checks as preflight only. Report each diagram as passed, failed, or not_run; report overall Mermaid success only when every block actually passes Mermaid.js parse+SVG render or Mermaid CLI."
+        "defaultPrompt": "Use DeepWiki's original six-phase workflow and preserve the workflow-runner contract. Before writing or validating Mermaid, read references/mermaid-authoring.md and references/mermaid-engine.md. For quoted pipe-delimited flowchart edge labels, use tools/mermaid/mermaid_lint.py: run --check; when safe, write a separate repaired output with --repair --output, review it, merge only generated/AUTOGEN changes, and re-run --check. Never overwrite input or alter manual content. Preserve node-label quotes, middle-label syntax such as A -- \"label\" --> B, and non-flowchart diagrams. Static authoring lint is not Mermaid parsing. Report authoring_lint as passed/repaired/unresolved separately from renderer passed/failed/not_run. Only actual Mermaid.js parse plus SVG render or Mermaid CLI can produce renderer passed. Run the packaged unittest regression suite when Python is available."
       }
     }
   }

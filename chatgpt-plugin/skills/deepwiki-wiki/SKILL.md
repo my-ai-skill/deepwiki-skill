@@ -155,7 +155,7 @@ Required page conventions:
 
 ### Phase 4 — `validate-docs`
 
-Check that all TOC pages exist; PAGE_ID values are correct and unique; each generated section has exactly one balanced matching AUTOGEN pair; manual sections are unmarked; headings and internal links are valid; citations point to the inspected repository commit/path/line range; and no claims lack evidence. Validate Mermaid with the strongest available method described below. Track every block as `passed`, `failed`, or `not_run`. A static check is not a parser. Overall Mermaid validation passes only if every block was actually parsed and rendered by Mermaid.js or Mermaid CLI. Fix safely and re-check up to three times. If a diagram remains invalid, mark it clearly and report it; do not declare success.
+Check that all TOC pages exist; PAGE_ID values are correct and unique; each generated section has exactly one balanced matching AUTOGEN pair; manual sections are unmarked; headings and internal links are valid; citations point to the inspected repository commit/path/line range; and no claims lack evidence. For Mermaid, run the packaged tools/mermaid/mermaid_lint.py static check. If it finds safely repairable wrapper-quoted pipe labels, write a repaired copy with --repair --output, review and merge only the affected generated/AUTOGEN content, then re-run --check. Never overwrite the input or alter manual content outside AUTOGEN markers. Record authoring lint as passed, repaired, or unresolved, separately from renderer status. Validate with Mermaid.js parse plus SVG render or Mermaid CLI when available; if no renderer ran, use not_run, not failed. If unresolved findings remain, report exact lines and do not declare authoring validation successful.
 
 ### Phase 5 — `doc-summary`
 
@@ -173,7 +173,11 @@ Mermaid is a separate tooling layer; it must not be coupled to a remote MCP serv
 
 Report the actual level used:
 
-- **Level 0 — authoring-policy/static checks**: check supported diagram declaration, balanced code fences, quoted node labels, UNQUOTED pipe-delimited flowchart edge labels, known unsafe syntax patterns, allowed subgraph identifiers, non-empty sequence messages, explicit activate/deactivate instead of shorthand activation, no citations inside diagrams, and diagram size/readability. This is not a full Mermaid parser and must never be reported as Mermaid compilation success.
+- **Level 0 — authoring-policy/static checks**: use tools/mermaid/mermaid_lint.py for the targeted quoted pipe-edge-label check/repair, plus structural checks for balanced fences, supported declarations, allowed subgraph identifiers, sequence-message and activation rules, citations outside diagrams, and readability. This is not a full Mermaid parser and must never be reported as Mermaid compilation success.
+
+### Deterministic repair helper
+
+Run python tools/mermaid/mermaid_lint.py path/to/page.md --check. For a safe repair, run python tools/mermaid/mermaid_lint.py path/to/page.md --repair --output /tmp/page.repaired.md, review the diff, merge only the affected generated/AUTOGEN content, and re-run --check. The helper never overwrites its input. It only normalizes complete wrapper-quoted pipe labels in graph/flowchart fences; it preserves node quotes, other diagram types, inline Markdown, and middle-label syntax such as A -- \"label\" --> B. Run its regression suite with python -m unittest discover -s tools/mermaid/tests -v.
 - **Level 1 — Mermaid.js parse/render**: open `tools/mermaid/preview.html` in a modern browser. The bundled preview page loads the official Mermaid JavaScript ESM build and uses its parser/render API to parse each Mermaid block and produce SVG. This is a real Mermaid.js parse/render check. The model/agent must not claim it ran unless the page was actually opened and returned a result.
 - **Level 2 — Mermaid CLI**: when the local runtime has Node.js, Mermaid CLI (`mmdc`), and its browser dependencies installed, run the original `scripts/validate_mermaid.py` or `mmdc`. This is optional for local coding-agent/CI runtimes, not a mandatory dependency for all consumers.
 

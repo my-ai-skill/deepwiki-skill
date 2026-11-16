@@ -1,0 +1,86 @@
+import json
+import tempfile
+import unittest
+from pathlib import Path
+
+from check_versions import check_repo
+
+
+def make_repo(root: Path, plugin_version="2.0.9", apm_version="1.0.4"):
+    (root / "chatgpt-plugin" / "skills" / "deepwiki-wiki").mkdir(parents=True)
+    (root / "chatgpt-plugin").mkdir(exist_ok=True)
+    (root / "apm.yml").write_text(f"name: deepwiki-skill\nversion: {apm_version}\n", encoding="utf-8")
+    for name in ("README.md", "README.zh-CN.md", "README.ja.md"):
+        (root / name).write_text(
+            f"![version](https://img.shields.io/badge/version-{apm_version}-blue.svg)\n",
+            encoding="utf-8",
+        )
+    manifest = {"name": "deepwiki-codebase-wiki", "version": plugin_version}
+    (root / "chatgpt-plugin" / "plugin.json").write_text(json.dumps(manifest), encoding="utf-8")
+    title = f"# DeepWiki Codebase Wiki {plugin_version}\n"
+    (root / "chatgpt-plugin" / "README.md").write_text(title, encoding="utf-8")
+    (root / "chatgpt-plugin" / "skills" / "deepwiki-wiki" / "README.md").write_text(
+        title, encoding="utf-8"
+    )
+
+
+class VersionAuditTests(unittest.TestCase):
+    def test_plugin_and_agent_skill_versions_are_independent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root, plugin_version="2.0.9", apm_version="1.0.4")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "passed", report)
+            self.assertEqual(report["plugin_version"], "2.0.9")
+            self.assertEqual(report["upstream_apm_skill_version"], "1.0.4")
+            self.assertTrue(report["versions_are_independent"])
+
+    def test_plugin_readme_mismatch_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            (root / "chatgpt-plugin" / "README.md").write_text(
+                "# DeepWiki Codebase Wiki 2.0.8\n", encoding="utf-8"
+            )
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("README.md title" in item for item in report["errors"]))
+
+    def test_codex_overlay_mismatch_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            overlay = root / "chatgpt-plugin" / ".codex-plugin"
+            overlay.mkdir()
+            (overlay / "plugin.json").write_text(
+                json.dumps({"version": "2.0.8"}), encoding="utf-8"
+            )
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any(".codex-plugin/plugin.json" in item for item in report["errors"]))
+
+    def test_old_release_heading_fails(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            doc = root / "chatgpt-plugin" / "skills" / "deepwiki-wiki" / "README.md"
+            doc.write_text("# DeepWiki Codebase Wiki 2.0.9\n\n## Mermaid rules (2.0.7)\n", encoding="utf-8")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("stale versioned heading" in item for item in report["errors"]))
+
+    def test_agent_skill_badge_must_match_apm_manifest(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root)
+            (root / "README.zh-CN.md").write_text(
+                "![version](https://img.shields.io/badge/version-2.0.9-blue.svg)\n",
+                encoding="utf-8",
+            )
+            report = check_repo(root)
+            self.assertEqual(report["status"], "failed")
+            self.assertTrue(any("README.zh-CN.md badge" in item for item in report["errors"]))
+
+
+if __name__ == "__main__":
+    unittest.main(verbosity=2)

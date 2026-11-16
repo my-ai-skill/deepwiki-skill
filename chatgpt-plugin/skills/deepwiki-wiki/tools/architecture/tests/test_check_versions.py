@@ -180,7 +180,7 @@ class VersionAuditTests(unittest.TestCase):
             make_repo(root, plugin_version="2.0.11", apm_version="1.0.4")
             test_fixture = root / "chatgpt-plugin" / "tools" / "architecture" / "tests" / "test_fixture.py"
             test_fixture.parent.mkdir(parents=True)
-            test_fixture.write_text('LEGACY_VERSION = "2.0.10"\\n', encoding="utf-8")
+            test_fixture.write_text('LEGACY_VERSION = "2.0.10"\n', encoding="utf-8")
             report = check_repo(root)
             self.assertEqual(report["status"], "passed", report)
 

@@ -86,6 +86,18 @@ If the host has no concurrent workers, process pages sequentially using the iden
 ## 3. Language, evidence, and citation policy
 
 - Use the language requested by the user. Otherwise use the conversation language; honor `project.language` in an existing TOC unless explicitly overridden.
+
+### Localized Wiki filenames (mandatory)
+
+The Wiki locale applies to page filenames as well as page titles and body text.
+1. Resolve one canonical locale before TOC design: explicit user language first, then existing `project.language`, then conversation language. Record it in the TOC and run report.
+2. Generate every page `filename` in that locale. For `zh` use readable Chinese names (for example `01_项目总览.md`, `02_核心执行流程.md`); for `en` use English names (for example `01_project_overview.md`). Apply equivalent native-script naming for other locales.
+3. Keep `page_id`, section IDs, source paths, API/function/type names, and code identifiers unchanged. Localize human-facing titles, descriptions, filenames, and diagram labels only.
+4. TOC `filename` is authoritative: create pages at exactly those paths; do not generate English names and rename later.
+5. Before doc-write, validate filenames against the resolved locale. During Phase 4 verify every TOC filename exists, names are unique, and README/TOC/architecture map/coverage reports/relative Markdown links use the same names. For incremental renames, update all references and verify before deleting the old generated page; preserve manual files.
+6. Run `tools/architecture/validate_toc_filenames.py <toc.yaml>`. Locale mismatch, duplicate filename, missing page, or stale link blocks structural validation. Report filename localization separately.
+7. An explicit filename-language override may be recorded as `project.filename_language`; otherwise it equals `project.language`.
+
 - The repository at the exact inspected commit/ref is the authority for implementation claims.
 - Every major architecture or implementation claim needs a nearby citation with a verified path, immutable commit SHA, and line range. Preferred format:
   - `[file.ext:42](https://github.com/OWNER/REPO/blob/COMMIT/path/file.ext#L42)`

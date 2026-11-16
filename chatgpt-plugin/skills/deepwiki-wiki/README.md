@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.10
+# DeepWiki Codebase Wiki 2.0.11
 
 This package is the ChatGPT/portable runtime distribution for the original DeepWiki Skill. It is intentionally additive: do not modify the original `.apm/` skill, its scripts, references, templates, worker definition, or prompt on the upstream default branch.
 
@@ -61,3 +61,8 @@ When a page covers an end-to-end runtime path, use `references/execution-lifecyc
 - `tools/architecture/audit_wiki.py` checks evidence line bounds and literal excerpts against local source files, source citations against the pinned commit, PAGE_ID/DIAGRAM_ID markers, diagram counts, relationship IDs across the architecture map and coverage ledger, representation anchors, and exact Mermaid fragments.
 - Run it after `validate_coverage.py` and include `_reports/cross_file_audit.json` in the Wiki reports.
 - This gate checks traceability and declared relationships; it cannot prove complex semantic correctness or discover relationships missing from both maps. Independent source rereading remains required.
+
+
+## Locale-aware Wiki filenames
+
+The resolved Wiki locale controls page filenames as well as page titles, descriptions, body text, and diagram labels. For example, a Chinese Wiki uses `01_项目总览.md` and `02_核心执行流程.md`; an English Wiki uses `01_project_overview.md`. Stable page/section IDs and source-code identifiers remain unchanged. The TOC `filename` is authoritative; all README, TOC, architecture/coverage reports, and relative Markdown links must be updated together on rename. Run `python tools/architecture/validate_toc_filenames.py docs/wiki/toc.yaml` to enforce locale consistency before writing and during validation.

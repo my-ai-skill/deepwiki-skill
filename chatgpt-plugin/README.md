@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.10
+# DeepWiki Codebase Wiki 2.0.11
 
 Cross-platform plugin packaging for the original `my-ai-skill/deepwiki-skill` Agent Skill.
 
@@ -51,3 +51,8 @@ The manifest validator does not understand the codebase by itself. Phase 4 must 
 - `tools/architecture/audit_wiki.py` cross-checks source line ranges and literal excerpts, commit-pinned Markdown citations, PAGE_ID/DIAGRAM_ID markers, architecture-map/coverage relationship identity, and exact diagram fragments.
 - The cross-file audit is deterministic consistency checking, not a semantic proof. Phase 4 must still independently re-read the source and reconstruct the runtime path.
 - Run the architecture and Mermaid regression suites before release; report browser Mermaid.js rendering separately from static checks.
+
+
+## Locale-aware Wiki filenames
+
+The resolved Wiki locale controls page filenames as well as page titles, descriptions, body text, and diagram labels. For example, a Chinese Wiki uses `01_项目总览.md` and `02_核心执行流程.md`; an English Wiki uses `01_project_overview.md`. Stable page/section IDs and source-code identifiers remain unchanged. The TOC `filename` is authoritative; all README, TOC, architecture/coverage reports, and relative Markdown links must be updated together on rename. Run `python tools/architecture/validate_toc_filenames.py docs/wiki/toc.yaml` to enforce locale consistency before writing and during validation.

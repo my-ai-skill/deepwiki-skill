@@ -11,10 +11,10 @@ import re
 from pathlib import Path
 from typing import Any
 
-SEMVER_RE = re.compile(r"^\\d+\\.\\d+\\.\\d+$")
-SEMVER_TOKEN_RE = re.compile(r"(?<![\\d.])\\d+\\.\\d+\\.\\d+(?![\\d.])")
-BADGE_RE = re.compile(r"version-([0-9]+\\.[0-9]+\\.[0-9]+)-blue\\.svg")
-VERSION_HEADING_RE = re.compile(r"^#{1,6}\\s+.*?\\((\\d+\\.\\d+\\.\\d+)\\)\\s*$", re.MULTILINE)
+SEMVER_RE = re.compile(r"^\d+\.\d+\.\d+$")
+SEMVER_TOKEN_RE = re.compile(r"(?<![\d.])\d+\.\d+\.\d+(?![\d.])")
+BADGE_RE = re.compile(r"version-([0-9]+\.[0-9]+\.[0-9]+)-blue\.svg")
+VERSION_HEADING_RE = re.compile(r"^#{1,6}\s+.*?\((\d+\.\d+\.\d+)\)\s*$", re.MULTILINE)
 
 # Scan package source, manifests, prompts, and docs rather than Markdown alone.
 TEXT_SUFFIXES = {
@@ -82,7 +82,7 @@ def check_repo(root: Path) -> dict[str, Any]:
     if package_root.exists() and plugin_version:
         version_family = ".".join(plugin_version.split(".")[:2])
         version_literal_re = re.compile(
-            rf"(?<![\\d.]){re.escape(version_family)}\\.\\d+(?![\\d.])"
+            rf"(?<![\d.]){re.escape(version_family)}\.\d+(?![\d.])"
         )
         for path in _iter_package_text_files(package_root):
             try:
@@ -110,7 +110,7 @@ def check_repo(root: Path) -> dict[str, Any]:
     try:
         apm_text = apm_path.read_text(encoding="utf-8")
         match = re.search(
-            r"(?m)^version:\\s*['\\"]?([0-9]+\\.[0-9]+\\.[0-9]+)['\\"]?\\s*$",
+            r"(?m)^version:\s*['\"]?([0-9]+\.[0-9]+\.[0-9]+)['\"]?\s*$",
             apm_text,
         )
         if not match:

@@ -9,21 +9,30 @@ from check_versions import check_repo
 
 
 def make_repo(root: Path, plugin_version="2.0.9", apm_version="1.0.4"):
+    def older_version(steps: int) -> str:
+        major, minor, patch = plugin_version.split(".")
+        return f"{major}.{minor}.{max(0, int(patch) - steps)}"
+
     (root / "chatgpt-plugin" / "skills" / "deepwiki-wiki").mkdir(parents=True)
     (root / "chatgpt-plugin").mkdir(exist_ok=True)
-    (root / "apm.yml").write_text(f"name: deepwiki-skill\nversion: {apm_version}\n", encoding="utf-8")
+    (root / "apm.yml").write_text(
+        f"name: deepwiki-skill\nversion: {apm_version}\n", encoding="utf-8"
+    )
     for name in ("README.md", "README.zh-CN.md", "README.ja.md"):
         (root / name).write_text(
             f"![version](https://img.shields.io/badge/version-{apm_version}-blue.svg)\n",
             encoding="utf-8",
         )
     manifest = {"name": "deepwiki-codebase-wiki", "version": plugin_version}
-    (root / "chatgpt-plugin" / "plugin.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (root / "chatgpt-plugin" / "plugin.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
     title = f"# DeepWiki Codebase Wiki {plugin_version}\n"
     (root / "chatgpt-plugin" / "README.md").write_text(title, encoding="utf-8")
     (root / "chatgpt-plugin" / "skills" / "deepwiki-wiki" / "README.md").write_text(
         title, encoding="utf-8"
     )
+    return older_version
 
 
 class VersionAuditTests(unittest.TestCase):
@@ -40,9 +49,10 @@ class VersionAuditTests(unittest.TestCase):
     def test_plugin_readme_mismatch_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            make_repo(root)
+            older_version = make_repo(root)
+            stale = older_version(1)
             (root / "chatgpt-plugin" / "README.md").write_text(
-                "# DeepWiki Codebase Wiki 2.0.8\n", encoding="utf-8"
+                f"# DeepWiki Codebase Wiki {stale}\n", encoding="utf-8"
             )
             report = check_repo(root)
             self.assertEqual(report["status"], "failed")
@@ -51,11 +61,11 @@ class VersionAuditTests(unittest.TestCase):
     def test_codex_overlay_mismatch_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            make_repo(root)
+            older_version = make_repo(root)
             overlay = root / "chatgpt-plugin" / ".codex-plugin"
             overlay.mkdir()
             (overlay / "plugin.json").write_text(
-                json.dumps({"version": "2.0.8"}), encoding="utf-8"
+                json.dumps({"version": older_version(1)}), encoding="utf-8"
             )
             report = check_repo(root)
             self.assertEqual(report["status"], "failed")
@@ -64,21 +74,31 @@ class VersionAuditTests(unittest.TestCase):
     def test_old_release_heading_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
-            make_repo(root)
+            older_version = make_repo(root)
             doc = root / "chatgpt-plugin" / "skills" / "deepwiki-wiki" / "README.md"
-            doc.write_text("# DeepWiki Codebase Wiki 2.0.9\n\n## Mermaid rules (2.0.7)\n", encoding="utf-8")
+            doc.write_text(
+                f"# DeepWiki Codebase Wiki 2.0.9\n\n## Mermaid rules ({older_version(2)})\n",
+                encoding="utf-8",
+            )
             report = check_repo(root)
             self.assertEqual(report["status"], "failed")
             self.assertTrue(any("stale versioned heading" in item for item in report["errors"]))
 
     def test_old_plugin_version_in_body_fails(self):
         with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp); make_repo(root)
+            root = Path(tmp)
+            older_version = make_repo(root)
+            stale = older_version(3)
             doc = root / "chatgpt-plugin" / "skills" / "deepwiki-wiki" / "README.md"
-            doc.write_text("# DeepWiki Codebase Wiki 2.0.9\\nPrevious release 2.0.6\\n", encoding="utf-8")
+            doc.write_text(
+                f"# DeepWiki Codebase Wiki 2.0.9\nPrevious release {stale}\n",
+                encoding="utf-8",
+            )
             report = check_repo(root)
             self.assertEqual(report["status"], "failed")
-            self.assertTrue(any("stale plugin release version 2.0.6" in item for item in report["errors"]))
+            self.assertTrue(
+                any(f"stale plugin release version {stale}" in item for item in report["errors"])
+            )
 
     def test_agent_skill_badge_must_match_apm_manifest(self):
         with tempfile.TemporaryDirectory() as tmp:

@@ -173,5 +173,17 @@ class VersionAuditTests(unittest.TestCase):
             self.assertEqual(report["status"], "failed")
             self.assertTrue(any("compatibility.md contains stale plugin release version" in item for item in report["errors"]))
 
+
+    def test_old_version_literals_in_test_fixtures_are_ignored(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            make_repo(root, plugin_version="2.0.11", apm_version="1.0.4")
+            test_fixture = root / "chatgpt-plugin" / "tools" / "architecture" / "tests" / "test_fixture.py"
+            test_fixture.parent.mkdir(parents=True)
+            test_fixture.write_text('LEGACY_VERSION = "2.0.10"\\n', encoding="utf-8")
+            report = check_repo(root)
+            self.assertEqual(report["status"], "passed", report)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

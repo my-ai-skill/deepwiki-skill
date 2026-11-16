@@ -36,6 +36,11 @@ def _iter_package_text_files(package_root: Path):
     for path in sorted(package_root.rglob("*")):
         if not path.is_file():
             continue
+        # Test fixtures intentionally contain old version literals to exercise
+        # this checker; they are not release documentation or runtime assets.
+        relative_parts = path.relative_to(package_root).parts
+        if "tests" in relative_parts or "__pycache__" in relative_parts:
+            continue
         try:
             content = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:

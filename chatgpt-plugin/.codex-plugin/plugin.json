@@ -2,7 +2,7 @@
   "interface": {
     "displayName": "DeepWiki Codebase Wiki",
     "shortDescription": "Cross-platform codebase wikis",
-    "longDescription": "An additive ChatGPT runtime adapter for the original DeepWiki Skill. Version 2.0.13 adds locale-aware Wiki filenames and validation, alongside source-grounded execution lifecycle analysis, evidence excerpts and exact page/diagram anchors, automated cross-file Wiki validation, and expanded regression tests while preserving the six-phase workflow and keeping the root APM Agent Skill version independent.",
+    "longDescription": "An additive ChatGPT adapter for the original DeepWiki Skill. Version 2.0.13 adds locale-aware Wiki filenames and validation, alongside source-grounded execution lifecycle analysis, evidence excerpts and exact page/diagram anchors, automated cross-file Wiki validation, and expanded regression tests. It preserves the six-phase workflow and keeps the root APM Agent Skill version independent.",
     "developerName": "chenxi",
     "category": "Developer tools",
     "capabilities": [],
@@ -22,9 +22,7 @@
     "mermaid",
     "subagents",
     "incremental-sync",
-    "cross-platform",
-    "architecture-coverage",
-    "version-consistency"
+    "cross-platform"
   ],
   "homepage": "https://github.com/my-ai-skill/deepwiki-skill",
   "repository": "https://github.com/my-ai-skill/deepwiki-skill",

@@ -17,12 +17,6 @@ BADGE_RE = re.compile(r"version-([0-9]+\.[0-9]+\.[0-9]+)-blue\.svg")
 VERSION_HEADING_RE = re.compile(r"^#{1,6}\s+.*?\((\d+\.\d+\.\d+)\)\s*$", re.MULTILINE)
 
 # Scan package source, manifests, prompts, and docs rather than Markdown alone.
-TEXT_SUFFIXES = {
-    ".md", ".json", ".py", ".yaml", ".yml", ".js", ".mjs", ".html",
-    ".txt", ".toml", ".sh", ".css", ".xml", ".ini", ".cfg",
-}
-
-
 def _read_json(path: Path, errors: list[str]) -> dict[str, Any] | None:
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
@@ -39,9 +33,21 @@ def _read_json(path: Path, errors: list[str]) -> dict[str, Any] | None:
 
 
 def _iter_package_text_files(package_root: Path):
+    """Yield UTF-8 text files regardless of extension; ignore binary assets."""
     for path in sorted(package_root.rglob("*")):
-        if path.is_file() and path.suffix.lower() in TEXT_SUFFIXES:
-            yield path
+        if not path.is_file():
+            continue
+        try:
+            content = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        except OSError:
+            # The caller will report read errors for files it attempts to audit.
+            yield path, None
+            continue
+        if "\\x00" in content:
+            continue
+        yield path, content
 
 
 def check_repo(root: Path) -> dict[str, Any]:
@@ -84,11 +90,9 @@ def check_repo(root: Path) -> dict[str, Any]:
         version_literal_re = re.compile(
             rf"(?<![\d.]){re.escape(version_family)}\.\d+(?![\d.])"
         )
-        for path in _iter_package_text_files(package_root):
-            try:
-                content = path.read_text(encoding="utf-8")
-            except (OSError, UnicodeError) as exc:
-                errors.append(f"cannot read {path.relative_to(root).as_posix()}: {exc}")
+        for path, content in _iter_package_text_files(package_root):
+            if content is None:
+                errors.append(f"cannot read {path.relative_to(root).as_posix()}")
                 continue
             relative = path.relative_to(root).as_posix()
             for old_version in VERSION_HEADING_RE.findall(content):

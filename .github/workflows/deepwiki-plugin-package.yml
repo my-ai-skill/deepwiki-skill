@@ -1,0 +1,63 @@
+name: DeepWiki plugin package and regression
+
+on:
+  push:
+    branches:
+      - feature/chatgpt-deepwiki-plugin
+    paths:
+      - "chatgpt-plugin/**"
+      - ".github/workflows/deepwiki-plugin-package.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  test-and-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the exact source commit
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify plugin and upstream APM versions
+        run: python chatgpt-plugin/skills/deepwiki-wiki/tools/architecture/check_versions.py .
+
+      - name: Run architecture and cross-file regression tests
+        working-directory: chatgpt-plugin/skills/deepwiki-wiki
+        run: python -m unittest discover -s tools/architecture/tests -v
+
+      - name: Run Mermaid regression tests
+        working-directory: chatgpt-plugin/skills/deepwiki-wiki
+        run: python -m unittest discover -s tools/mermaid/tests -v
+
+      - name: Create plugin package and source manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd chatgpt-plugin
+          zip -qr ../deepwiki-codebase-wiki-2.0.10.zip .
+          cd ..
+          {
+            echo "plugin_version=$(python -c 'import json; print(json.load(open("chatgpt-plugin/plugin.json", encoding="utf-8"))["version"])')"
+            echo "source_commit=${GITHUB_SHA}"
+            echo "package_sha256=$(sha256sum deepwiki-codebase-wiki-2.0.10.zip | awk '{print $1}')"
+            echo "package_files=$(find chatgpt-plugin -type f | wc -l | tr -d ' ')"
+          } > deepwiki-codebase-wiki-2.0.10.manifest.txt
+
+      - name: Upload the tested plugin package
+        uses: actions/upload-artifact@v4
+        with:
+          name: deepwiki-codebase-wiki-2.0.10
+          path: |
+            deepwiki-codebase-wiki-2.0.10.zip
+            deepwiki-codebase-wiki-2.0.10.manifest.txt
+          if-no-files-found: error
+          retention-days: 14

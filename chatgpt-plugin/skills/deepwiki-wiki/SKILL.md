@@ -50,7 +50,7 @@ Pass the corresponding fields supported by the host:
 - `architecture_map`: the source-derived page/relationship plan from `_context/architecture_map.json`, when applicable.
 - `coverage_ledger`: the page-local claim/relationship evidence ledger returned by `doc-write` and merged during validation.
 
-The phase specification is the source of truth. A worker must not execute multiple phases in one invocation. It must stop on a failing required action and return the failed action, observed output, and minimal recovery step.
+The phase specification is the source of truth for its phase actions. In addition, mandatory adapter references explicitly required by this skill and `references/workflow-runner-contract.md` (including `references/architecture-completeness.md`) must be loaded even when they are additive to a legacy upstream phase-spec reference list. A worker must not execute multiple phases in one invocation. It must stop on a failing required action and return the failed action, observed output, and minimal recovery step.
 
 ### Orchestration and dependency rules
 

@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DeepWiki Mermaid Preview</title>
+  <style>
+    :root { color-scheme: light dark; font-family: system-ui, sans-serif; }
+    body { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+    textarea { box-sizing: border-box; width: 100%; min-height: 230px; font: 13px/1.5 ui-monospace, monospace; padding: 12px; }
+    button { padding: 8px 14px; margin: 8px 8px 8px 0; cursor: pointer; }
+    .status { white-space: pre-wrap; padding: 10px; border: 1px solid #8888; border-radius: 8px; }
+    .diagram { overflow: auto; padding: 14px; margin: 12px 0; border: 1px solid #8888; border-radius: 8px; background: white; color: black; }
+    .diagram svg { max-width: 100%; height: auto; }
+    .error { color: #c33; }
+  </style>
+</head>
+<body>
+  <h1>DeepWiki Mermaid Preview</h1>
+  <p>Paste Mermaid source or Markdown containing <code>```mermaid</code> blocks. Rendering runs locally in this browser tab using Mermaid.js.</p>
+  <textarea id="source" spellcheck="false">graph TD
+  A["Repository Scan"] --> B["TOC Design"]
+  B --> C["Page-level Doc Write"]
+  C --> D["Validation"]
+  D --> E["Summary"]</textarea>
+  <div>
+    <button id="render">Parse and render</button>
+    <button id="clear">Clear output</button>
+  </div>
+  <div id="status" class="status" role="status">Ready. Click “Parse and render”.</div>
+  <section id="output" aria-live="polite"></section>
+  <script type="module" src="./mermaid-preview.js"></script>
+</body>
+</html>

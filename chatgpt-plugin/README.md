@@ -1,4 +1,4 @@
-# DeepWiki Codebase Wiki 2.0.11
+# DeepWiki Codebase Wiki 2.0.12
 
 Cross-platform plugin packaging for the original `my-ai-skill/deepwiki-skill` Agent Skill.
 

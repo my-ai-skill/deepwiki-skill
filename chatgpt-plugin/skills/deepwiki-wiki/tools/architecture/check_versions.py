@@ -37,7 +37,7 @@ def _iter_package_text_files(package_root: Path):
         if not path.is_file():
             continue
         # Test fixtures intentionally contain old version literals to exercise
-        # this checker; they are not release documentation or runtime assets.
+        # this checker; they are not shipped release documentation or runtime assets.
         relative_parts = path.relative_to(package_root).parts
         if "tests" in relative_parts or "__pycache__" in relative_parts:
             continue

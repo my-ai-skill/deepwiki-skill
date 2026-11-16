@@ -24,7 +24,7 @@ One invocation = exactly one phase. Load its phase specification first, then onl
 | No subagents | Current agent becomes the runner and executes phase specs sequentially, preserving the same inputs, references, outputs, and validation. |
 | Browser-only model | Produce artifacts and explicit next-step instructions; never claim local scripts or browser JS ran unless actually executed. |
 
-## Mandatory architecture-completeness contract (2.0.8)
+## Mandatory architecture-completeness contract
 
 Every TOC-based/automatic run must load `references/architecture-completeness.md` before TOC design, page writing, and validation. This is a mandatory adapter overlay even if the pinned legacy upstream phase spec does not list this newly packaged reference; it does not replace or alter that upstream phase spec. Phase 2 produces `_context/architecture_map.json`; Phase 3 returns a page-local claim/relationship evidence ledger with each page; Phase 4 independently re-reads key source files, audits every diagram against source-derived relationships, merges the ledgers, writes `_reports/architecture_coverage.json`, and runs `tools/architecture/validate_coverage.py`. The coverage helper validates the declared manifest only; it cannot discover omitted relationships or prove semantic evidence. The source reread is therefore mandatory. Structural validity, citation validity, Mermaid syntax, and semantic completeness must be reported as separate dimensions. Any unreviewed item or coverage gap makes content coverage `incomplete`; a critical in-scope diagram omission or malformed/evidenceless record makes it `failed`.
 
@@ -40,9 +40,9 @@ Workers return page artifacts to the orchestrator instead of concurrently writin
 
 Report `parallel` only if multiple workers were actually scheduled concurrently by the host. Otherwise report `sequential fallback`. Report the actual number of workers and completed/failed pages when those facts are available.
 
-## Pinned source dependencies (2.0.4)
+## Pinned source dependencies
 
-For reproducible execution, retrieve the original phase specifications and Mermaid helper files from repository `my-ai-skill/deepwiki-skill` at commit `2c95d11f13c1ef9251a44439d4a8367a826e8e8e` (the commit containing the corrected Mermaid policy, validator, and Phase 4 instructions). Do not use a floating branch URL for these dependencies.
+The pinned commit below is an immutable upstream dependency baseline, not the installed ChatGPT plugin version. For reproducible execution, retrieve the original phase specifications and Mermaid helper files from repository `my-ai-skill/deepwiki-skill` at commit `2c95d11f13c1ef9251a44439d4a8367a826e8e8e` (the commit containing the corrected Mermaid policy, validator, and Phase 4 instructions). Do not use a floating branch URL for these dependencies.
 
 Mermaid-specific paths at that exact commit:
 
